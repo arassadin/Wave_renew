@@ -54,8 +54,9 @@ namespace Wave_renew
 		System::Windows::Forms::Button^  button_pauseCalc;
 		System::Windows::Forms::Button^  button_stopCalc;
 
-		System::Windows::Forms::ToolStripMenuItem^  fIleToolStripMenuItem;
-		System::Windows::Forms::ToolStripMenuItem^  openToolStripMenuItem;
+		System::Windows::Forms::ToolStripMenuItem^  ToolStrip_file;
+		System::Windows::Forms::ToolStripMenuItem^  ToolStrip_file_openMap;
+		System::Windows::Forms::ToolStripMenuItem^  ToolStrip_file_openConfig;
 
 		System::ComponentModel::Container ^components;
 		System::Windows::Forms::MenuStrip^  menuStrip_main;
@@ -64,8 +65,7 @@ namespace Wave_renew
 		ViewForm^ vf;
 		Graphics^ mainGraphics;
 		Bitmap^ mainBitmap;
-	private: System::Windows::Forms::ToolStripMenuItem^  openConfigToolStripMenuItem;
-			 String^ mapFileName;
+		String^ mapFileName;
 
 	public:
 		mainForm(void)
@@ -778,12 +778,12 @@ namespace Wave_renew
 			this->button_pauseCalc = (gcnew System::Windows::Forms::Button());
 			this->button_stopCalc = (gcnew System::Windows::Forms::Button());
 			this->menuStrip_main = (gcnew System::Windows::Forms::MenuStrip());
-			this->fIleToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->openToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->ToolStrip_file = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->ToolStrip_file_openMap = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->ToolStrip_file_openConfig = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->textBox_isobath = (gcnew System::Windows::Forms::TextBox());
 			this->label11 = (gcnew System::Windows::Forms::Label());
 			this->checkBox_autoSaveLayers = (gcnew System::Windows::Forms::CheckBox());
-			this->openConfigToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menuStrip_main->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -1013,29 +1013,36 @@ namespace Wave_renew
 			// 
 			// menuStrip_main
 			// 
-			this->menuStrip_main->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->fIleToolStripMenuItem });
+			this->menuStrip_main->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->ToolStrip_file });
 			this->menuStrip_main->Location = System::Drawing::Point(0, 0);
 			this->menuStrip_main->Name = L"menuStrip_main";
 			this->menuStrip_main->Size = System::Drawing::Size(312, 28);
 			this->menuStrip_main->TabIndex = 27;
 			this->menuStrip_main->Text = L"menuStrip1";
 			// 
-			// fIleToolStripMenuItem
+			// ToolStrip_file
 			// 
-			this->fIleToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
-				this->openToolStripMenuItem,
-					this->openConfigToolStripMenuItem
+			this->ToolStrip_file->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+				this->ToolStrip_file_openMap,
+					this->ToolStrip_file_openConfig
 			});
-			this->fIleToolStripMenuItem->Name = L"fIleToolStripMenuItem";
-			this->fIleToolStripMenuItem->Size = System::Drawing::Size(44, 24);
-			this->fIleToolStripMenuItem->Text = L"FIle";
+			this->ToolStrip_file->Name = L"ToolStrip_file";
+			this->ToolStrip_file->Size = System::Drawing::Size(44, 24);
+			this->ToolStrip_file->Text = L"FIle";
 			// 
-			// openToolStripMenuItem
+			// ToolStrip_file_openMap
 			// 
-			this->openToolStripMenuItem->Name = L"openToolStripMenuItem";
-			this->openToolStripMenuItem->Size = System::Drawing::Size(175, 24);
-			this->openToolStripMenuItem->Text = L"Open Map";
-			this->openToolStripMenuItem->Click += gcnew System::EventHandler(this, &mainForm::openToolStripMenuItem_Click);
+			this->ToolStrip_file_openMap->Name = L"ToolStrip_file_openMap";
+			this->ToolStrip_file_openMap->Size = System::Drawing::Size(175, 24);
+			this->ToolStrip_file_openMap->Text = L"Open Map";
+			this->ToolStrip_file_openMap->Click += gcnew System::EventHandler(this, &mainForm::openToolStripMenuItem_Click);
+			// 
+			// ToolStrip_file_openConfig
+			// 
+			this->ToolStrip_file_openConfig->Name = L"ToolStrip_file_openConfig";
+			this->ToolStrip_file_openConfig->Size = System::Drawing::Size(175, 24);
+			this->ToolStrip_file_openConfig->Text = L"Open Config";
+			this->ToolStrip_file_openConfig->Click += gcnew System::EventHandler(this, &mainForm::openConfigToolStripMenuItem_Click);
 			// 
 			// textBox_isobath
 			// 
@@ -1065,13 +1072,6 @@ namespace Wave_renew
 			this->checkBox_autoSaveLayers->TabIndex = 31;
 			this->checkBox_autoSaveLayers->Text = L"Auto Save Layers";
 			this->checkBox_autoSaveLayers->UseVisualStyleBackColor = true;
-			// 
-			// openConfigToolStripMenuItem
-			// 
-			this->openConfigToolStripMenuItem->Name = L"openConfigToolStripMenuItem";
-			this->openConfigToolStripMenuItem->Size = System::Drawing::Size(175, 24);
-			this->openConfigToolStripMenuItem->Text = L"Open Config";
-			this->openConfigToolStripMenuItem->Click += gcnew System::EventHandler(this, &mainForm::openConfigToolStripMenuItem_Click);
 			// 
 			// mainForm
 			// 
@@ -1127,10 +1127,10 @@ namespace Wave_renew
 			running = true;
 
 			this->button_startCalc->Enabled = false;
-			this->openToolStripMenuItem->Enabled = false;
+			this->ToolStrip_file_openMap->Enabled = false;
 			int code = processing();
 			this->button_startCalc->Enabled = true;
-			this->openToolStripMenuItem->Enabled = true;
+			this->ToolStrip_file_openMap->Enabled = true;
 
 			running = false;
 		}
