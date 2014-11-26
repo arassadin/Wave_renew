@@ -2,6 +2,7 @@
 
 #include<cmath>
 #include<cstdio>
+#include<iostream>
 #include<Windows.h>
 #include<WinUser.h>
 #include<winstring.h>
@@ -353,13 +354,14 @@ namespace Wave_renew
 
 			for (int p = 0; p < param_cnt; p++)
 			{
+				std::cout << p << std::endl;
 				if (fgets(cs, MAX_STR_LEN, infile));
 				String^ s = gcnew String(cs);
 				if (!s->ToLower()->IndexOf(sparam[p]))
 				{
 					MessageBox::Show("Wrong file format!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
-					return false;
-				};
+					//return false;
+				}
 				int pos = s->IndexOf("=");
 				//if it is not a "data:"
 				if (p != 7)
@@ -374,7 +376,8 @@ namespace Wave_renew
 			start_y = param[5];
 			end_y = param[6];
 
-			if (bottom) delete_d(bottom);
+			if (bottom)
+				delete_d(bottom);
 			bottom = new_d(size_y, size_x);
 
 			int _deep;
@@ -397,8 +400,10 @@ namespace Wave_renew
 			this->textBox_sizeX->Text = System::Convert::ToString(size_x);
 			this->textBox_sizeY->Text = System::Convert::ToString(size_y);
 
+			/* it is still needed?
 			izobata = System::Convert::ToDouble(this->textBox_isobath->Text);
 			calc_time = System::Convert::ToDouble(this->textBox_calcTime->Text);
+			*/
 			delta_x = (end_x - start_x) / (size_x - 1);
 			delta_y = (end_y - start_y) / (size_y - 1);
 			this->textBox_dx->Text = System::Convert::ToString(delta_x);
@@ -408,6 +413,8 @@ namespace Wave_renew
 
 			MessageBox::Show("File Loading Complete!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
 			this->button_startCalc->Enabled = true;
+
+			return true;
 		}
 
 		void SaveBmpClick(int time)
@@ -1212,6 +1219,10 @@ namespace Wave_renew
 				this->mainBitmap = gcnew Bitmap(size_x, size_y);
 				vf->pictureBox_main->Image = this->mainBitmap;
 				mainGraphics = Graphics::FromImage(this->mainBitmap);
+			}
+			else
+			{
+				MessageBox::Show("this", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
 			}
 		}
 
