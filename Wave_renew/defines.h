@@ -10,11 +10,10 @@
 int t;
 double *delta_t;
 int time_moments;
-int output_moments(30);
+int output_moments=30;
 int file_count;  // count of bmp files
 bool running = false;
-int version;
-long int    size_x, size_y;      // Sizes of matrix
+long int size_x, size_y;      // Sizes of matrix
 double start_x, end_x;      // Range X (parallels) (degrees)
 double start_y, end_y;      // Range Y (meredians) (degrees)
 double delta_x, delta_y;    // Steps on X & Y (degrees)
@@ -38,6 +37,10 @@ int **terr_up;    // Bricks
 double **t_h_v_up;
 double **terr_points;    // Brick's corners coordinates
 double **point_points;   // Point's corners coordinates
+
+double **terr_tmp;    // Brick's corners coordinates
+double **point_tmp;   // Point's corners coordinates
+
 int scaling;
 extern int ax, bx;
 extern int count;

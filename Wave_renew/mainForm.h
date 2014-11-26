@@ -8,9 +8,11 @@
 
 #include"defines.h"
 #include"ViewForm.h"
+#include <msclr/marshal.h>
 
 using namespace std;
 using namespace System::Drawing;
+using namespace msclr::interop;
 
 namespace Wave_renew
 {
@@ -20,7 +22,7 @@ namespace Wave_renew
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
-
+	
 	public ref class mainForm : public System::Windows::Forms::Form
 	{
 
@@ -200,7 +202,7 @@ namespace Wave_renew
 			//   return (Color) RGB(0, 0, 0);;
 		}
 
-		int show_d(double **m, int size_y, int size_x, int scaling, Color(m2col)(double))
+		int show_d(double **m, int size_y, int size_x, int scaling)
 		{
 			if (!m) return 1;
 
@@ -221,7 +223,7 @@ namespace Wave_renew
 					for (int sy = 0; sy < scaling; sy++)
 						for (int sx = 0; sx < scaling; sx++)
 							h += m[scaling*y + sy][scaling*x + sx];
-					this->mainBitmap->SetPixel(x, floor(size_y / scaling) - 1 - y, m2col(h / (scaling*scaling)));
+					this->mainBitmap->SetPixel(x, floor(size_y / scaling) - 1 - y, eta2col(h / (scaling*scaling)));
 
 					/* deprecated? is needed?
 					Application->ProcessMessages();
@@ -289,7 +291,7 @@ namespace Wave_renew
 					else
 						a[j][i] = bottom[j][i] + LAND_UP;
 
-			if (show_d(a, size_y, size_x, scaling, &eta2col))
+			if (show_d(a, size_y, size_x, scaling))
 				vf->Hide();
 			else
 				vf->Show();
@@ -318,7 +320,7 @@ namespace Wave_renew
 					else
 						a[j][i] = bottom[j][i] + LAND_UP;
 
-			if (show_d(a, size_y, size_x, scaling, &eta2col))
+			if (show_d(a, size_y, size_x, scaling))
 				vf->Hide();
 			else
 				vf->Show();
@@ -333,15 +335,19 @@ namespace Wave_renew
 			FILE* infile;
 
 			/* fopen( , "rt") ??? */
-			if ((infile = fopen(mapFileName, "r")) == NULL)
+			marshal_context ^ context = gcnew marshal_context();
+			const char* tmpFileName = context->marshal_as<const char*>(mapFileName);
+					 
+			if ((infile = fopen(tmpFileName, "r")) == NULL)
 			{
 				MessageBox::Show("Input file not found!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
 				return false;
 			}
+			delete context;
 
 			const int param_cnt = 8;
 			int param[param_cnt];
-			char sparam[param_cnt] = { "version", "size_x", "size_y", "start_x", "end_x", "start_y", "end_y", "data:"};
+			array<String^>^ sparam = gcnew array<String^>(param_cnt) { "version", "size_x", "size_y", "start_x", "end_x", "start_y", "end_y", "data:"};
 
 			char cs[MAX_STR_LEN];
 
@@ -524,11 +530,11 @@ namespace Wave_renew
 
 			for (int j = 0; j<terr_cnt; j++)
 			{
-				t_h_v_up[0][j] = System::Convert::ToDouble(Terrs->Cells[j + 1][1]);
-				t_h_v_up[1][j] = System::Convert::ToDouble(Terrs->Cells[j + 1][2]);
+				t_h_v_up[0][j] = System::Convert::ToDouble(terr_tmp[j + 1][1]);
+				t_h_v_up[1][j] = System::Convert::ToDouble(terr_tmp[j + 1][2]);
 				t_h_v_up[2][j] = t_h_v_up[1][j] / t_h_v_up[0][j];
 				for (int i = 0; i<8; i++)
-					terr_points[i][j] = System::Convert::ToDouble(Terrs->Cells[j + 1][i + 3]);
+					terr_points[i][j] = System::Convert::ToDouble(terr_tmp[j + 1][i + 3]);
 				fill_tetragon(terr_up, j + 1,
 					0, 0, size_x - 1, size_y - 1,
 					(terr_points[0][j] - start_x) / delta_x + 0.5, (terr_points[1][j] - start_y) / delta_y + 0.5,
@@ -644,7 +650,7 @@ namespace Wave_renew
 					{
 						for (int ipoint = 0; ipoint<2; ipoint++)
 						{
-							point_points[ipoint][jpoint] = System::Convert::ToDouble(Points->Cells[jpoint + 1][ipoint + 1]);
+							point_points[ipoint][jpoint] = System::Convert::ToDouble(point_tmp[jpoint + 1][ipoint + 1]);
 							numberxx = int(((point_points[0][jpoint] - start_x) / delta_x + 0.5));
 							numberyy = int(((point_points[1][jpoint] - start_y) / delta_y + 0.5));
 							// int rx=a;
@@ -933,7 +939,8 @@ namespace Wave_renew
 			// 
 			// textBox_outTime
 			// 
-			this->textBox_outTime->Location = System::Drawing::Point(238, 138);
+			this->textBox_outTime->Enabled = false;
+			this->textBox_outTime->Location = System::Drawing::Point(238, 165);
 			this->textBox_outTime->Name = L"textBox_outTime";
 			this->textBox_outTime->Size = System::Drawing::Size(62, 22);
 			this->textBox_outTime->TabIndex = 22;
@@ -943,7 +950,7 @@ namespace Wave_renew
 			// 
 			// textBox_calcTime
 			// 
-			this->textBox_calcTime->Location = System::Drawing::Point(85, 138);
+			this->textBox_calcTime->Location = System::Drawing::Point(85, 134);
 			this->textBox_calcTime->Name = L"textBox_calcTime";
 			this->textBox_calcTime->Size = System::Drawing::Size(62, 22);
 			this->textBox_calcTime->TabIndex = 21;
@@ -953,7 +960,7 @@ namespace Wave_renew
 			// label9
 			// 
 			this->label9->AutoSize = true;
-			this->label9->Location = System::Drawing::Point(166, 141);
+			this->label9->Location = System::Drawing::Point(166, 168);
 			this->label9->Name = L"label9";
 			this->label9->Size = System::Drawing::Size(66, 17);
 			this->label9->TabIndex = 20;
@@ -962,7 +969,7 @@ namespace Wave_renew
 			// label10
 			// 
 			this->label10->AutoSize = true;
-			this->label10->Location = System::Drawing::Point(15, 141);
+			this->label10->Location = System::Drawing::Point(15, 137);
 			this->label10->Name = L"label10";
 			this->label10->Size = System::Drawing::Size(66, 17);
 			this->label10->TabIndex = 19;
@@ -970,6 +977,7 @@ namespace Wave_renew
 			// 
 			// button_applyParameters
 			// 
+			this->button_applyParameters->Enabled = false;
 			this->button_applyParameters->Location = System::Drawing::Point(19, 194);
 			this->button_applyParameters->Name = L"button_applyParameters";
 			this->button_applyParameters->Size = System::Drawing::Size(286, 28);
@@ -1046,17 +1054,18 @@ namespace Wave_renew
 			// 
 			// textBox_isobath
 			// 
-			this->textBox_isobath->Location = System::Drawing::Point(238, 165);
+			this->textBox_isobath->Location = System::Drawing::Point(238, 133);
 			this->textBox_isobath->Name = L"textBox_isobath";
 			this->textBox_isobath->Size = System::Drawing::Size(62, 22);
 			this->textBox_isobath->TabIndex = 28;
 			this->textBox_isobath->Text = L"-10";
 			this->textBox_isobath->TextAlign = System::Windows::Forms::HorizontalAlignment::Right;
+			this->textBox_isobath->TextChanged += gcnew System::EventHandler(this, &mainForm::textBox_isobath_TextChanged);
 			// 
 			// label11
 			// 
 			this->label11->AutoSize = true;
-			this->label11->Location = System::Drawing::Point(178, 168);
+			this->label11->Location = System::Drawing::Point(178, 136);
 			this->label11->Name = L"label11";
 			this->label11->Size = System::Drawing::Size(54, 17);
 			this->label11->TabIndex = 29;
@@ -1072,6 +1081,7 @@ namespace Wave_renew
 			this->checkBox_autoSaveLayers->TabIndex = 31;
 			this->checkBox_autoSaveLayers->Text = L"Auto Save Layers";
 			this->checkBox_autoSaveLayers->UseVisualStyleBackColor = true;
+			this->checkBox_autoSaveLayers->CheckedChanged += gcnew System::EventHandler(this, &mainForm::checkBox_autoSaveLayers_CheckedChanged);
 			// 
 			// mainForm
 			// 
@@ -1137,22 +1147,42 @@ namespace Wave_renew
 
 		System::Void textBox_calcTime_TextChanged(System::Object^  sender, System::EventArgs^  e)
 		{
-			if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "")
-				this->button_startCalc->Enabled = true;
+			if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
+			{
+				if (System::Convert::ToDouble(this->textBox_calcTime->Text) > 0)
+				{
+					this->button_applyParameters->Enabled = true;
+				}
+				else
+					this->button_applyParameters->Enabled = false;
+			}
 			else
-				this->button_startCalc->Enabled = false;
+			{
+				this->button_applyParameters->Enabled = false;
+			}
 		}
 
 		System::Void textBox_outTime_TextChanged(System::Object^  sender, System::EventArgs^  e)
 		{
-			if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "")
-				this->button_startCalc->Enabled = true;
+			if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
+			{
+				if (System::Convert::ToDouble(this->textBox_outTime->Text) > 0)
+				{
+					this->button_applyParameters->Enabled = true;
+				}
+				else
+					this->button_applyParameters->Enabled = false;
+			}
 			else
-				this->button_startCalc->Enabled = false;
+			{
+				this->button_applyParameters->Enabled = false;
+			}
 		}
 
 		System::Void button_applyParameters_Click(System::Object^  sender, System::EventArgs^  e)
 		{
+			/* save parameters */
+			this->button_startCalc->Enabled = true;
 		}
 
 		System::Void button_pauseCalc_Click(System::Object^  sender, System::EventArgs^  e)
@@ -1189,5 +1219,47 @@ namespace Wave_renew
 		{
 			/* put .xml reading here */
 		}
-	};
+
+		System::Void textBox_isobath_TextChanged(System::Object^  sender, System::EventArgs^  e) 
+		{
+			if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
+				this->button_applyParameters->Enabled = true;
+			else
+				this->button_applyParameters->Enabled = false;
+		}
+
+		System::Void checkBox_autoSaveLayers_CheckedChanged(System::Object^  sender, System::EventArgs^  e) 
+		{
+			if (this->checkBox_autoSaveLayers->Checked)
+			{
+				this->textBox_outTime->Enabled = true;
+				if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
+				{
+					if (System::Convert::ToDouble(this->textBox_calcTime->Text) > 0 && System::Convert::ToDouble(this->textBox_outTime->Text) > 0)
+					{
+						this->button_applyParameters->Enabled = true;
+					}
+					else
+						this->button_applyParameters->Enabled = false;
+				}
+				else
+					this->button_applyParameters->Enabled = false;
+			}
+			else
+			{
+				this->textBox_outTime->Enabled = false;
+				if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
+				{
+					if (System::Convert::ToDouble(this->textBox_calcTime->Text) > 0)
+					{
+						this->button_applyParameters->Enabled = true;
+					}
+					else
+						this->button_applyParameters->Enabled = false;
+				}
+				else
+					this->button_applyParameters->Enabled = false;
+			}
+		}
+};
 }
