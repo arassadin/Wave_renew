@@ -20,7 +20,6 @@ double delta_x, delta_y;    // Steps on X & Y (degrees)
 double delta_x_m, *delta_y_m;// Steps on X & Y (metres)
 double izobata;             // Izobata (metres)
 double h_max;               // Deeper place (metres)
-double calc_time;
 double **eta_new;
 double **bottom;  // Earth relief (source data)
 double **h;       // Bottom relief for calculating
@@ -41,7 +40,7 @@ double **point_points;   // Point's corners coordinates
 double **terr_tmp;    // Brick's corners coordinates
 double **point_tmp;   // Point's corners coordinates
 
-int scaling;
+double scaling;
 extern int ax, bx;
 extern int count;
 extern bool have_point;

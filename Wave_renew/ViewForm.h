@@ -98,7 +98,7 @@ namespace Wave_renew
 		}
 #pragma endregion
 
-private: 
+public: 
 	System::Void button_ShowHeight_Click(System::Object^  sender, System::EventArgs^  e) 
 	{
 

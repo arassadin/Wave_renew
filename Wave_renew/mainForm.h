@@ -74,6 +74,7 @@ namespace Wave_renew
 		mainForm(void)
 		{
 			InitializeComponent();
+			scaling = 2.0;
 		}
 
 	protected:
@@ -126,16 +127,22 @@ namespace Wave_renew
 
 		Color bottom2col(double h)
 		{
-			const int h_max = 71; // = sqrt(5000)
-			const int h_min = -100;// = -sqrt(10000)
-			if (h>0) h = sqrt(h); else if (h < 0) h = -sqrt(-h);
-			if (h >= 0) return Color::FromArgb(0, 55 + h * 200 / h_max, 0);
-			else return Color::FromArgb(0, 0, 255 - h * 255 / h_min);
+			const int h_max = 80; // = sqrt(5000)
+			const int h_min = -110;// = -sqrt(10000)
+			if (h>0) 
+				h = sqrt(h); 
+			else 
+				if (h < 0) 
+					h = -sqrt(-h);
+			if (h >= 0) 
+				return Color::FromArgb(0, 55 + h * 200 / h_max, 0);
+			else 
+				return Color::FromArgb(0, 0, 255 - h * 255 / h_min);
 		}
 
 		Color eta2col(double h)
 		{
-			const int h_max = 71; // = sqrt(5000)
+			const int h_max = 72; // = sqrt(5000)
 			const int h_minmax = 10; // = sqrt(25)
 			const int h_maxmax = 15; // = sqrt(25)
 			if (h >= LAND_UP)
@@ -143,49 +150,50 @@ namespace Wave_renew
 				h = sqrt(h - LAND_UP);
 				return Color::FromArgb(0, 55 + h * 200 / h_max, 0);
 			}
-			else if (h <= h_maxmax)
-			{
-				if (h > h_minmax + 2)
-					return Color::FromArgb(161, 19, 33);
-				if (h > h_minmax)
-					return Color::FromArgb(200, 0, 200);
-				if (h > h_minmax - 2)
-					return Color::FromArgb(120, 100, 200);
-				if (h > h_minmax - 3)
-					return Color::FromArgb(25, 25, 225);
-				if (h > h_minmax - 4)
-					return Color::FromArgb(150, 150, 250);
-				if (h > h_minmax - 5)
-					return Color::FromArgb(100, 220, 220);
-				if (h > h_minmax - 6)
-					return Color::FromArgb(200, 220, 220);
-				if (h > h_minmax - 6.5)
-					return Color::FromArgb(100, 255, 100);
-				if (h > h_minmax - 7)
-					return Color::FromArgb(133, 27, 181);
-				if (h > h_minmax - 7.5)
-					return Color::FromArgb(250, 250, 0);
-				if (h > h_minmax - 8)
-					return Color::FromArgb(255, 181, 41);
-				if (h > h_minmax - 8.5)
-					return Color::FromArgb(255, 200, 200);
-				if (h > h_minmax - 9)
-					return Color::FromArgb(255, 0, 0);
-				if (h > h_minmax - 9.5)
-					return Color::FromArgb(255, 100, 0);
-				if (h > h_minmax - 9.99)
-					return Color::FromArgb(166, 249, 45);
-				else 
-					if (h > -h_maxmax)
-						return Color::FromArgb(0, 0, 70 + h * 70 / h_maxmax);
-					else
-						return Color::FromArgb(125, 25, 225);//RGB(0, 0, 0);
-			}
-			else
-			{
-				h = sqrt(h);
-				return Color::FromArgb(0, h * 255 / h_max / 2, 255 - h * 255 / h_max / 2);
-			}
+			else 
+				if (h <= h_maxmax)
+				{
+					if (h > h_minmax + 2)
+						return Color::FromArgb(161, 19, 33);
+					if (h > h_minmax)
+						return Color::FromArgb(200, 0, 200);
+					if (h > h_minmax - 2)
+						return Color::FromArgb(120, 100, 200);
+					if (h > h_minmax - 3)
+						return Color::FromArgb(25, 25, 225);
+					if (h > h_minmax - 4)
+						return Color::FromArgb(150, 150, 250);
+					if (h > h_minmax - 5)
+						return Color::FromArgb(100, 220, 220);
+					if (h > h_minmax - 6)
+						return Color::FromArgb(200, 220, 220);
+					if (h > h_minmax - 6.5)
+						return Color::FromArgb(100, 255, 100);
+					if (h > h_minmax - 7)
+						return Color::FromArgb(133, 27, 181);
+					if (h > h_minmax - 7.5)
+						return Color::FromArgb(250, 250, 0);
+					if (h > h_minmax - 8)
+						return Color::FromArgb(255, 181, 41);
+					if (h > h_minmax - 8.5)
+						return Color::FromArgb(255, 200, 200);
+					if (h > h_minmax - 9)
+						return Color::FromArgb(255, 0, 0);
+					if (h > h_minmax - 9.5)
+						return Color::FromArgb(255, 100, 0);
+					if (h > h_minmax - 9.99)
+						return Color::FromArgb(166, 249, 45);
+					else 
+						if (h > -h_maxmax)
+							return Color::FromArgb(0, 0, 70 + h * 70 / h_maxmax);
+						else
+							return Color::FromArgb(125, 25, 225);//RGB(0, 0, 0);
+				}
+				else
+				{
+					h = sqrt(h);
+					return Color::FromArgb(0, h * 255 / h_max / 2, 255 - h * 255 / h_max / 2);
+				}
 		}
 
 		Color h2col(double h)
@@ -207,7 +215,8 @@ namespace Wave_renew
 
 		int show_d(double **m, int size_y, int size_x, int scaling)
 		{
-			if (!m) return 1;
+			if (!m) 
+				return 1;
 
 			/*is needed?
 			if (running)
@@ -226,7 +235,7 @@ namespace Wave_renew
 					for (int sy = 0; sy < scaling; sy++)
 						for (int sx = 0; sx < scaling; sx++)
 							h += m[scaling*y + sy][scaling*x + sx];
-					this->mainBitmap->SetPixel(x, floor(size_y / scaling) - 1 - y, eta2col(h / (scaling*scaling)));
+					this->mainBitmap->SetPixel(x, floor(size_y / scaling) - 1 - y, bottom2col(h / (scaling*scaling)));
 
 					/* deprecated? is needed?
 					Application->ProcessMessages();
@@ -278,6 +287,11 @@ namespace Wave_renew
 			Form2->Invalidate(); // For immediately form repaint after it's shows
 		}
 		*/
+
+		void showBottom()
+		{
+			show_d(bottom, size_y, size_x, scaling);
+		}
 
 		void showDisturbance()
 		{
@@ -385,7 +399,7 @@ namespace Wave_renew
 				for (int x = 0; x < size_x; x++)
 				{
 					if (fscanf(infile, "%i", &_deep))
-						bottom[y][x] = (double)_deep;//Terrain H coordinates
+						bottom[y][x] = (double)_deep; // Terrain H coordinates
 					else
 					{
 						MessageBox::Show("Wrong file format!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
@@ -751,16 +765,8 @@ namespace Wave_renew
 				if (!running) break;
 			}
 
-			if (t < calc_time)
-			{
-				MessageBox::Show("Modelling Aborted!", "Warning!", MessageBoxButtons::OK, MessageBoxIcon::Warning);
-				return 1;
-			}
-			else
-			{
-				MessageBox::Show("Modelling Complete!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
-				return 0;
-			}
+			MessageBox::Show("Modelling Complete!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
+			return 0;
 		}
 
 		void checkReadyForCalculationState()
@@ -968,7 +974,6 @@ namespace Wave_renew
 			// 
 			// textBox_outTime
 			// 
-			this->textBox_outTime->Enabled = false;
 			this->textBox_outTime->Location = System::Drawing::Point(238, 165);
 			this->textBox_outTime->Name = L"textBox_outTime";
 			this->textBox_outTime->Size = System::Drawing::Size(62, 22);
@@ -1070,14 +1075,14 @@ namespace Wave_renew
 			// ToolStrip_file_openMap
 			// 
 			this->ToolStrip_file_openMap->Name = L"ToolStrip_file_openMap";
-			this->ToolStrip_file_openMap->Size = System::Drawing::Size(175, 24);
+			this->ToolStrip_file_openMap->Size = System::Drawing::Size(162, 24);
 			this->ToolStrip_file_openMap->Text = L"Open Map";
 			this->ToolStrip_file_openMap->Click += gcnew System::EventHandler(this, &mainForm::openToolStripMenuItem_Click);
 			// 
 			// ToolStrip_file_openConfig
 			// 
 			this->ToolStrip_file_openConfig->Name = L"ToolStrip_file_openConfig";
-			this->ToolStrip_file_openConfig->Size = System::Drawing::Size(175, 24);
+			this->ToolStrip_file_openConfig->Size = System::Drawing::Size(162, 24);
 			this->ToolStrip_file_openConfig->Text = L"Open Config";
 			this->ToolStrip_file_openConfig->Click += gcnew System::EventHandler(this, &mainForm::openConfigToolStripMenuItem_Click);
 			// 
@@ -1167,7 +1172,8 @@ namespace Wave_renew
 
 			this->button_startCalc->Enabled = false;
 			this->ToolStrip_file_openMap->Enabled = false;
-			int code = processing();
+			//int code = processing();
+			showBottom();
 			this->button_startCalc->Enabled = true;
 			this->ToolStrip_file_openMap->Enabled = true;
 
@@ -1201,7 +1207,7 @@ namespace Wave_renew
 		System::Void button_applyParameters_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			/* save parameters */
-			calc_time = System::Convert::ToDouble(this->textBox_calcTime->Text);
+			time_moments = System::Convert::ToInt32(this->textBox_calcTime->Text);
 			output_moments = System::Convert::ToDouble(this->textBox_outTime->Text);
 			izobata = System::Convert::ToDouble(this->textBox_isobath->Text);
 			this->button_startCalc->Enabled = true;
@@ -1233,6 +1239,9 @@ namespace Wave_renew
 			{
 				this->mainBitmap = gcnew Bitmap(size_x, size_y);
 				vf->pictureBox_main->Image = this->mainBitmap;
+				System::Drawing::Size pbSize = vf->pictureBox_main->Size;
+				//vf->pictureBox_main->Scale(pbSize.Width/size_x, pbSize.Height/size_y);
+				//vf->pictureBox_main->Scale(0.5, 0.5);
 				mainGraphics = Graphics::FromImage(this->mainBitmap);
 			}
 			else
