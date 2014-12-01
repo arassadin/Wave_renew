@@ -89,10 +89,13 @@ namespace Wave_renew
 		double** new_d(int _y, int _x)
 		{
 			double **_m = new double *[_y + 1];
-			if (!_m) return 0;
+			if (!_m) 
+				return 0;
 			for (int j = 0; j < _y; j++)
-				if (!(_m[j] = new double[_x])) {
-					for (; j >= 0; j--) delete _m[j];
+				if (!(_m[j] = new double[_x])) 
+				{
+					for (; j >= 0; j--) 
+						delete _m[j];
 					return 0;
 				}
 			_m[_y] = NULL;
@@ -172,12 +175,11 @@ namespace Wave_renew
 					return Color::FromArgb(255, 100, 0);
 				if (h > h_minmax - 9.99)
 					return Color::FromArgb(166, 249, 45);
-
-				else if (h > -h_maxmax)
-					return Color::FromArgb(0, 0, 70 + h * 70 / h_maxmax);
-				else
-					return Color::FromArgb(125, 25, 225);//RGB(0, 0, 0);
-
+				else 
+					if (h > -h_maxmax)
+						return Color::FromArgb(0, 0, 70 + h * 70 / h_maxmax);
+					else
+						return Color::FromArgb(125, 25, 225);//RGB(0, 0, 0);
 			}
 			else
 			{
@@ -277,7 +279,6 @@ namespace Wave_renew
 		}
 		*/
 
-		/* to ViewForm*/
 		void showDisturbance()
 		{
 			if (!eta) return;
@@ -302,8 +303,7 @@ namespace Wave_renew
 				vf->pictureBox_main->Update();
 		}
 
-		/* to ViewForm */
-		void ShowHClick()
+		void ShowHeights()
 		{
 			if (!h) return;
 			/* if needed
@@ -355,12 +355,12 @@ namespace Wave_renew
 			for (int p = 0; p < param_cnt; p++)
 			{
 				std::cout << p << std::endl;
-				if (fgets(cs, MAX_STR_LEN, infile));
+				fgets(cs, MAX_STR_LEN, infile);
 				String^ s = gcnew String(cs);
-				if (!s->ToLower()->IndexOf(sparam[p]))
+				if (s->ToLower()->IndexOf(sparam[p]) == -1)
 				{
 					MessageBox::Show("Wrong file format!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
-					//return false;
+					return false;
 				}
 				int pos = s->IndexOf("=");
 				//if it is not a "data:"
@@ -411,7 +411,7 @@ namespace Wave_renew
 
 			fclose(infile);
 
-			MessageBox::Show("File Loading Complete!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
+			MessageBox::Show("File Loading Completed!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
 			this->button_startCalc->Enabled = true;
 
 			return true;
@@ -761,6 +761,28 @@ namespace Wave_renew
 				MessageBox::Show("Modelling Complete!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
 				return 0;
 			}
+		}
+
+		void checkReadyForCalculationState()
+		{
+			if (!running)
+			{
+				if (this->textBox_calcTime->Text != "" && this->textBox_isobath->Text != "" && this->textBox_outTime->Text != "")
+				{
+					if (System::Convert::ToDouble(this->textBox_calcTime->Text) > 0 && System::Convert::ToDouble(this->textBox_outTime->Text))
+					{
+						this->button_applyParameters->Enabled = true;
+					}
+					else
+						this->button_applyParameters->Enabled = false;
+				}
+				else
+				{
+					this->button_applyParameters->Enabled = false;
+				}
+			}
+			else
+				this->button_applyParameters->Enabled = false;
 		}
 
 #pragma region Windows Form Designer generated code
@@ -1154,41 +1176,34 @@ namespace Wave_renew
 
 		System::Void textBox_calcTime_TextChanged(System::Object^  sender, System::EventArgs^  e)
 		{
-			if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
-			{
-				if (System::Convert::ToDouble(this->textBox_calcTime->Text) > 0)
-				{
-					this->button_applyParameters->Enabled = true;
-				}
-				else
-					this->button_applyParameters->Enabled = false;
-			}
-			else
-			{
-				this->button_applyParameters->Enabled = false;
-			}
+			this->button_startCalc->Enabled = false; 
+			checkReadyForCalculationState();
 		}
 
 		System::Void textBox_outTime_TextChanged(System::Object^  sender, System::EventArgs^  e)
 		{
-			if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
-			{
-				if (System::Convert::ToDouble(this->textBox_outTime->Text) > 0)
-				{
-					this->button_applyParameters->Enabled = true;
-				}
-				else
-					this->button_applyParameters->Enabled = false;
-			}
-			else
-			{
-				this->button_applyParameters->Enabled = false;
-			}
+			this->button_startCalc->Enabled = false;
+			checkReadyForCalculationState();
+		}
+
+		System::Void textBox_isobath_TextChanged(System::Object^  sender, System::EventArgs^  e)
+		{
+			this->button_startCalc->Enabled = false;
+			checkReadyForCalculationState();
+		}
+
+		System::Void checkBox_autoSaveLayers_CheckedChanged(System::Object^  sender, System::EventArgs^  e)
+		{
+			this->button_startCalc->Enabled = false;
+			checkReadyForCalculationState();
 		}
 
 		System::Void button_applyParameters_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			/* save parameters */
+			calc_time = System::Convert::ToDouble(this->textBox_calcTime->Text);
+			output_moments = System::Convert::ToDouble(this->textBox_outTime->Text);
+			izobata = System::Convert::ToDouble(this->textBox_isobath->Text);
 			this->button_startCalc->Enabled = true;
 		}
 
@@ -1229,48 +1244,6 @@ namespace Wave_renew
 		System::Void openConfigToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 		{
 			/* put .xml reading here */
-		}
-
-		System::Void textBox_isobath_TextChanged(System::Object^  sender, System::EventArgs^  e) 
-		{
-			if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
-				this->button_applyParameters->Enabled = true;
-			else
-				this->button_applyParameters->Enabled = false;
-		}
-
-		System::Void checkBox_autoSaveLayers_CheckedChanged(System::Object^  sender, System::EventArgs^  e) 
-		{
-			if (this->checkBox_autoSaveLayers->Checked)
-			{
-				this->textBox_outTime->Enabled = true;
-				if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
-				{
-					if (System::Convert::ToDouble(this->textBox_calcTime->Text) > 0 && System::Convert::ToDouble(this->textBox_outTime->Text) > 0)
-					{
-						this->button_applyParameters->Enabled = true;
-					}
-					else
-						this->button_applyParameters->Enabled = false;
-				}
-				else
-					this->button_applyParameters->Enabled = false;
-			}
-			else
-			{
-				this->textBox_outTime->Enabled = false;
-				if (this->textBox_calcTime->Text != "" && this->textBox_outTime->Text != "" && this->textBox_isobath->Text != "")
-				{
-					if (System::Convert::ToDouble(this->textBox_calcTime->Text) > 0)
-					{
-						this->button_applyParameters->Enabled = true;
-					}
-					else
-						this->button_applyParameters->Enabled = false;
-				}
-				else
-					this->button_applyParameters->Enabled = false;
-			}
 		}
 };
 }
