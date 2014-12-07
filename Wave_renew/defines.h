@@ -41,7 +41,3 @@ double **terr_tmp;    // Brick's corners coordinates
 double **point_tmp;   // Point's corners coordinates
 
 double scaling;
-extern int ax, bx;
-extern int count;
-extern bool have_point;
-extern int xw0, xw1, yw0, yw1;

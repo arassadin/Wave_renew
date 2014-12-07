@@ -48,6 +48,7 @@ namespace Wave_renew
 			this->pictureBox_main->Location = System::Drawing::Point(-1, 0);
 			this->pictureBox_main->Name = L"pictureBox_main";
 			this->pictureBox_main->Size = System::Drawing::Size(800, 377);
+			this->pictureBox_main->SizeMode = System::Windows::Forms::PictureBoxSizeMode::AutoSize;
 			this->pictureBox_main->TabIndex = 0;
 			this->pictureBox_main->TabStop = false;
 			// 
@@ -91,9 +92,11 @@ namespace Wave_renew
 			this->Controls->Add(this->button_ShowHeight);
 			this->Controls->Add(this->pictureBox_main);
 			this->Name = L"ViewForm";
+			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
 			this->Text = L"Calculation";
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox_main))->EndInit();
 			this->ResumeLayout(false);
+			this->PerformLayout();
 
 		}
 #pragma endregion

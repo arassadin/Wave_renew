@@ -6,6 +6,7 @@
 #include<Windows.h>
 #include<WinUser.h>
 #include<winstring.h>
+#include<fstream>
 
 #include"defines.h"
 #include"ViewForm.h"
@@ -229,6 +230,7 @@ namespace Wave_renew
 			//Drawing
 			//******************************************************************************
 			for (int y = 0; y < floor(size_y / scaling); y++)
+			{
 				for (int x = 0; x < floor(size_x / scaling); x++)
 				{
 					double h = 0;
@@ -236,11 +238,8 @@ namespace Wave_renew
 						for (int sx = 0; sx < scaling; sx++)
 							h += m[scaling*y + sy][scaling*x + sx];
 					this->mainBitmap->SetPixel(x, floor(size_y / scaling) - 1 - y, bottom2col(h / (scaling*scaling)));
-
-					/* deprecated? is needed?
-					Application->ProcessMessages();
-					*/
 				}
+			}
 			//******************************************************************************
 
 			for (int longitude = System::Convert::ToInt32(this->textBox_rangeY_end->Text); longitude > System::Convert::ToInt32(this->textBox_rangeY_start->Text); longitude--)
@@ -319,21 +318,28 @@ namespace Wave_renew
 
 		void ShowHeights()
 		{
-			if (!h) return;
 			/* if needed
 			form_prepare();
 			*/
+
 			double **a = new_d(size_y, size_x);
-			for (int j = 0; j < size_y; j++)
+			for (int i = 0; i < size_y; i++)
+			{
 				for (int i = 0; i < size_x; i++)
-					if (bottom[j][i] < 0)
-						if (bottom[j][i] < 0.0)
+				{
+					if (bottom[i][i] < 0)
+						if (bottom[i][i] < 0.0)
 						{
-							a[j][i] = visota[j][i];
+							a[i][i] = visota[i][i];
 						}
-						else { ; a[j][i] = 0; }
+						else
+						{
+							a[i][i] = 0;
+						}
 					else
-						a[j][i] = bottom[j][i] + LAND_UP;
+						a[i][i] = bottom[i][i] + LAND_UP;
+				}
+			}
 
 			if (show_d(a, size_y, size_x, scaling))
 				vf->Hide();
@@ -343,6 +349,48 @@ namespace Wave_renew
 			delete_d(a);
 			if (!running)
 				vf->pictureBox_main->Update();
+		}
+
+		void OutHeights(char* fileName)
+		{
+			FILE* outFile = fopen(fileName, "w");
+
+			for (int i = 0; i < size_y; i++)
+			{
+				double h(0.0);
+				for (int j = 0; j < size_x - 1; j++)
+				{
+					if (bottom[i][j] < 0)
+						if (bottom[i][j] < 0.0)
+						{
+							h = visota[i][j];
+						}
+						else
+						{
+							h = 0.0;
+						}
+					else
+						h = bottom[i][j] + LAND_UP;
+
+					fprintf(outFile, "%lf; ", h);
+				}
+
+				if (bottom[i][size_x - 1] < 0)
+					if (bottom[i][size_x - 1] < 0.0)
+					{
+						h = visota[i][size_x - 1];
+					}
+					else
+					{
+						h = 0.0;
+					}
+				else
+					h = bottom[i][size_x - 1] + LAND_UP;
+
+				fprintf(outFile, "\n");
+			}
+
+			fclose(outFile);
 		}
 
 		bool loadMap()
@@ -377,7 +425,6 @@ namespace Wave_renew
 					return false;
 				}
 				int pos = s->IndexOf("=");
-				//if it is not a "data:"
 				if (p != 7)
 					param[p] = System::Convert::ToInt32(s->Substring(pos + 1, s->Length - pos - 1)->Trim());
 			}
@@ -394,17 +441,18 @@ namespace Wave_renew
 				delete_d(bottom);
 			bottom = new_d(size_y, size_x);
 
-			int _deep;
+			double _deep;
 			for (int y = 0; y < size_y; y++)
 				for (int x = 0; x < size_x; x++)
 				{
-					if (fscanf(infile, "%i", &_deep))
-						bottom[y][x] = (double)_deep; // Terrain H coordinates
+					_deep=0.0;
+					if (fscanf(infile, "%lf", &_deep))
+						bottom[y][x] = _deep;
 					else
 					{
 						MessageBox::Show("Wrong file format!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
 						return false;
-					};
+					}
 				}
 
 			this->textBox_rangeX_start->Text = System::Convert::ToString(start_x);
@@ -413,11 +461,6 @@ namespace Wave_renew
 			this->textBox_rangeY_end->Text = System::Convert::ToString(end_y);
 			this->textBox_sizeX->Text = System::Convert::ToString(size_x);
 			this->textBox_sizeY->Text = System::Convert::ToString(size_y);
-
-			/* it is still needed?
-			izobata = System::Convert::ToDouble(this->textBox_isobath->Text);
-			calc_time = System::Convert::ToDouble(this->textBox_calcTime->Text);
-			*/
 			delta_x = (end_x - start_x) / (size_x - 1);
 			delta_y = (end_y - start_y) / (size_y - 1);
 			this->textBox_dx->Text = System::Convert::ToString(delta_x);
@@ -426,12 +469,11 @@ namespace Wave_renew
 			fclose(infile);
 
 			MessageBox::Show("File Loading Completed!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
-			this->button_startCalc->Enabled = true;
 
 			return true;
 		}
 
-		void SaveBmpClick(int time)
+		void SaveBmp(int time)
 		{
 			mainBitmap->Save("output_t" + System::Convert::ToString(time) + ".bmp");
 		}
@@ -460,8 +502,49 @@ namespace Wave_renew
 			}
 		}
 
+		void tmp()
+		{
+			terr_cnt = 2;
+
+			terr_tmp = new double*[terr_cnt];
+			for (int i = 0; i < terr_cnt; i++)
+				terr_tmp[i] = new double[10];
+
+			terr_tmp[0][0] = 30;
+			terr_tmp[0][1] = 5;
+			terr_tmp[0][2] = 288.64;
+			terr_tmp[0][3] = -19.04;
+			terr_tmp[0][4] = 289.36;
+			terr_tmp[0][5] = -20.48;
+			terr_tmp[0][6] = 288.8;
+			terr_tmp[0][7] = -19;
+			terr_tmp[0][8] = 289.52;
+			terr_tmp[0][9] = -20.4;
+
+			terr_tmp[1][0] = 10;
+			terr_tmp[1][1] = -1;
+			terr_tmp[1][2] = 288.8;
+			terr_tmp[1][3] = -19;
+			terr_tmp[1][4] = 289.52;
+			terr_tmp[1][5] = -20.4;
+			terr_tmp[1][6] = 288.96;
+			terr_tmp[1][7] = -18.96;
+			terr_tmp[1][8] = 289.68;
+			terr_tmp[1][9] = -20.32;
+
+			point_cnt = 1;
+			point_tmp = new double*[point_cnt];
+			for (int i = 0; i < point_cnt; i++)
+				point_tmp[i] = new double[2];
+
+			point_tmp[0][0] = 231.72;
+			point_tmp[0][1] = 51.609;
+		}
+
 		int processing()
 		{
+			tmp();
+
 			int old_x = 0;
 			int old_y = 0;
 			running = true;
@@ -485,20 +568,21 @@ namespace Wave_renew
 				delete_d(v_old);
 
 			h = new_d(size_y, size_x);
-			eta = new_d(size_y, size_x); // don't forgot remove it, if eta can be loaded independently
-			eta_old = new_d(size_y, size_x); // don't forgot remove it, if eta_old can be loaded independently   visota = new_d(size_y, size_x);
+			eta = new_d(size_y, size_x);
+			eta_old = new_d(size_y, size_x); 
 			eta_new = new_d(size_y, size_x);
 			u = new_d(size_y, size_x);
 			v = new_d(size_y, size_x);
 			u_old = new_d(size_y, size_x);
 			v_old = new_d(size_y, size_x);
 			visota = new_d(size_y, size_x);
-			if (!(bottom || h || eta || eta_old || visota || u || v || u_old || v_old)) // matrix not initialized
+			if (!(bottom || h || eta || eta_old || visota || u || v || u_old || v_old))
 				return 2;
 
 			if (delta_y_m)	
 				delete delta_y_m;
 			delta_y_m = new double[size_y];
+
 			if (delta_t) 
 				delete delta_t;
 			delta_t = new double[size_y];
@@ -534,15 +618,21 @@ namespace Wave_renew
 			//first problem
 			for (int y = 0; y<size_y; y++) 
 			{
-				for (int x = 0; x<size_x; x++) 
+				for (int x = 0; x < size_x; x++) 
 				{
-					if (bottom[y][x] <= 0 && bottom[y][x] >= izobata) h[y][x] = izobata;
-					else if (bottom[y][x] >= 0) h[y][x] = -1;   //for correct sqrt(-h[j][i]);
-					else h[y][x] = bottom[y][x];
+					if (bottom[y][x] <= 0 && bottom[y][x] >= izobata) 
+						h[y][x] = izobata;
+					else 
+						if (bottom[y][x] >= 0) 
+							h[y][x] = -1;   //for correct sqrt(-h[j][i]);
+						else 
+							h[y][x] = bottom[y][x];
+
 					eta_old[y][x] = 0;
 					u_old[y][x] = 0;
 					v_old[y][x] = 0;
 					terr_up[y][x] = 0;
+
 					if (h_max > bottom[y][x]) 
 						h_max = bottom[y][x]; // find deeper place
 				}
@@ -551,11 +641,13 @@ namespace Wave_renew
 
 			for (int j = 0; j<terr_cnt; j++)
 			{
-				t_h_v_up[0][j] = System::Convert::ToDouble(terr_tmp[j + 1][1]);
-				t_h_v_up[1][j] = System::Convert::ToDouble(terr_tmp[j + 1][2]);
+				t_h_v_up[0][j] = terr_tmp[j][0];
+				t_h_v_up[1][j] = terr_tmp[j][1];
 				t_h_v_up[2][j] = t_h_v_up[1][j] / t_h_v_up[0][j];
+
 				for (int i = 0; i<8; i++)
-					terr_points[i][j] = System::Convert::ToDouble(terr_tmp[j + 1][i + 3]);
+					terr_points[i][j] = terr_tmp[j][i + 2];
+
 				fill_tetragon(terr_up, j + 1,
 					0, 0, size_x - 1, size_y - 1,
 					(terr_points[0][j] - start_x) / delta_x + 0.5, (terr_points[1][j] - start_y) / delta_y + 0.5,
@@ -584,20 +676,19 @@ namespace Wave_renew
 			//float Koef_Sh=-M_G*Koef_Sheroh*Koef_Sheroh;
 			for (t = 0; t <= time_moments; t++)
 			{
+				this->button_startCalc->Text = System::Convert::ToString(t);
+
 				for (int j = 1; j<size_y - 1; j++)
 				{
 					float Koef_Koriolisa = 2 * skor_zemli*cos((start_y + j*delta_y) / 180.0*M_PI);
 					for (int i = 1; i<size_x - 1; i++)
 					{
 						if (i<size_x - 2 && j<size_y - 2)
-							eta[j][i] = eta_old[j][i]
-							+ delta_t[j] * (0.5 / delta_x_m * (u_old[j + 1][i] * (h[j + 2][i] + h[j + 1][i])
-							- u_old[j][i] * (h[j + 1][i] + h[j][i])
-							)
-							+ 0.5 / delta_y_m[j] * (v_old[j][i + 1] * (h[j][i + 2] + h[j][i + 1])
-							- v_old[j][i] * (h[j][i + 1] + h[j][i])
-							)
-							);
+							eta[j][i] = eta_old[j][i] + delta_t[j] \
+							* (0.5 / delta_x_m * (u_old[j + 1][i] * (h[j + 2][i] + h[j + 1][i]) \
+							- u_old[j][i] * (h[j + 1][i] + h[j][i])) \
+							+ 0.5 / delta_y_m[j] * (v_old[j][i + 1] * (h[j][i + 2] + h[j][i + 1]) \
+							- v_old[j][i] * (h[j][i + 1] + h[j][i])) );
 
 						if (i>0 && j>0)
 						{
@@ -613,10 +704,9 @@ namespace Wave_renew
 								)*delta_t[j];
 						}
 
-						for (int b = 0; b<terr_cnt; b++)
-							if (terr_up[j][i] == b + 1 && t*delta_t[j]<t_h_v_up[0][b] - delta_t[j])
+						for (int b = 0; b < terr_cnt; b++)
+							if (terr_up[j][i] == b + 1 && t*delta_t[j] < t_h_v_up[0][b] - delta_t[j])
 								eta[j][i] = eta[j][i] + t_h_v_up[2][b] * delta_t[j];
-
 					}
 				}
 
@@ -631,6 +721,7 @@ namespace Wave_renew
 					eta[size_y - 2][i] = eta_old[size_y - 2][i] - sqrt(-h[size_y - 2][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(eta_old[size_y - 2][i] - eta_old[size_y - 3][i]);
 					eta[size_y - 1][i] = eta[size_y - 2][i];// - sqrt(-h[size_y-1][i]*M_G)*(delta_t[i]/delta_y_m[i])*(eta_old[size_y-1][i]-eta_old[size_y-2][i]);
 				}
+
 				for (int j = 1; j<size_y; j++)
 				{
 					u[j][0] = sqrt(-M_G*h[j][0])*eta[j][1] / (eta[j][1] - h[j][0]);
@@ -649,9 +740,13 @@ namespace Wave_renew
 						if (eta[j][i]>15.) { eta[j][i] = 15.; }
 						if (eta[j][i]<-15.) { eta[j][i] = -15.; }
 						// SizeX->Text=FloatToStr(eta[j][i]);
-						if (visota[j][i]<eta[j][i]){ visota[j][i] = eta[j][i]; }
+						if (visota[j][i] < eta[j][i])
+						{ 
+							visota[j][i] = eta[j][i]; 
+						}
 					}
 				}
+
 				swap_d(&eta_old, &eta);
 				swap_d(&v_old, &v);
 				swap_d(&u_old, &u);
@@ -661,25 +756,33 @@ namespace Wave_renew
 				DeltaT->Caption = Format("dt = %3.3f", ARRAYOFCONST((delta_t[0])));
 				*/
 
-				int numberxx = 0.;
-				int numberyy = 0.;
+				if (t == 20000)
+					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t20000");
+				if (t == 40000)
+					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t40000");
+				if (t == 60000)
+					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t60000");
 
-				scaling = 2.0;
+				int numberxx = 0;
+				int numberyy = 0;
+
 				if (t%output_moments == 0)
 				{
-					for (int jpoint = 0; jpoint<point_cnt; jpoint++)
+					//MessageBox::Show(System::Convert::ToString(t), "TimeOut", MessageBoxButtons::OK, MessageBoxIcon::Information);
+
+					for (int jpoint = 0; jpoint < point_cnt; jpoint++)
 					{
-						for (int ipoint = 0; ipoint<2; ipoint++)
+						for (int ipoint = 0; ipoint < 2; ipoint++)
 						{
-							point_points[ipoint][jpoint] = System::Convert::ToDouble(point_tmp[jpoint + 1][ipoint + 1]);
+							point_points[ipoint][jpoint] = point_tmp[jpoint][ipoint];
 							numberxx = int(((point_points[0][jpoint] - start_x) / delta_x + 0.5));
 							numberyy = int(((point_points[1][jpoint] - start_y) / delta_y + 0.5));
-							// int rx=a;
+							//int rx=a;
 							//int ry=b;
 						}
 					}
 
-					showDisturbance();
+//					showDisturbance();
 
 					int h = (int)(delta_t[0] * t) / 3600;
 					int m = ((int)(delta_t[0] * t) - h * 3600) / 60;
@@ -702,7 +805,7 @@ namespace Wave_renew
 					//old: pBitmap->Canvas->TextRect( Rect(50, 50, 50 + pBitmap->Canvas->TextWidth("00'00'00"), 50 + pBitmap->Canvas->TextHeight("00'00'00")), \
 						50, 50, Format("%2.2d\'%2.2d\'%2.2d", OPENARRAY(TVarRec, (h, m, s))));
 					RectangleF r(50, 50, 0, 0);
-					this->mainGraphics->DrawString("", font, fontBrush, r);
+//					this->mainGraphics->DrawString("", font, fontBrush, r);
 					// ----------------------------------------------------------------------
 
 					//old: pBitmap->Canvas->Brush->Color = Color::Silver;
@@ -712,7 +815,7 @@ namespace Wave_renew
 					r.Y = 0;
 					r.Width = this->mainBitmap->Width;
 					r.Height = this->mainBitmap->Height;
-					this->mainGraphics->FillRectangle(sb, r);
+//					this->mainGraphics->FillRectangle(sb, r);
 					// -------------------------------------------------
 
 					for (float j = 15; j <= 30; j += 0.5) 
@@ -727,7 +830,7 @@ namespace Wave_renew
 						r.Y = SCALE_WIDTH / 2 + (30 - j)*(this->mainBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30;
 						r.Width = SCALE_WIDTH + floor(size_x / scaling);
 						r.Height = SCALE_WIDTH / 2 + (30 - j + 1)*(this->mainBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30;
-						this->mainGraphics->FillRectangle(sb, r);
+//						this->mainGraphics->FillRectangle(sb, r);
 						// --------------------------------------------------------------------------------
 					}
 					for (float j = 15; j <= 30; j += 0.5) 
@@ -748,7 +851,7 @@ namespace Wave_renew
 						fontBrush = gcnew SolidBrush(Color::FromArgb(255, 0, 0, 127+j));
 						PointF point(SCALE_WIDTH + floor(size_x / scaling), \
 									-1.0 + SCALE_WIDTH / 4 + (30 - j + 1)*(this->mainBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30);
-						this->mainGraphics->DrawString("", font, fontBrush, point);
+//						this->mainGraphics->DrawString("", font, fontBrush, point);
 						// ---------------------------------------------------
 					}
 
@@ -756,13 +859,14 @@ namespace Wave_renew
 					pBitmap->Canvas->Brush->Color = c1; pBitmap->Canvas->Font->Color = c2;
 					*/
 
-					if (this->checkBox_autoSaveLayers->Checked)
-						SaveBmpClick(t);
+//					if (this->checkBox_autoSaveLayers->Checked)
+//						SaveBmp(t);
 					file_count++;
 
-					vf->pictureBox_main->Update();
+//					vf->pictureBox_main->Update();
 				}
-				if (!running) break;
+				if (!running) 
+					break;
 			}
 
 			MessageBox::Show("Modelling Complete!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
@@ -789,6 +893,13 @@ namespace Wave_renew
 			}
 			else
 				this->button_applyParameters->Enabled = false;
+		}
+
+		int test()
+		{
+			MessageBox::Show("ok", "ok", MessageBoxButtons::OK, MessageBoxIcon::None);
+			//showBottom();
+			return 0;
 		}
 
 #pragma region Windows Form Designer generated code
@@ -1150,6 +1261,7 @@ namespace Wave_renew
 			this->Controls->Add(this->label2);
 			this->Controls->Add(this->label1);
 			this->Controls->Add(this->menuStrip_main);
+			this->KeyPreview = true;
 			this->MainMenuStrip = this->menuStrip_main;
 			this->MaximizeBox = false;
 			this->MaximumSize = System::Drawing::Size(330, 330);
@@ -1159,8 +1271,7 @@ namespace Wave_renew
 			this->menuStrip_main->ResumeLayout(false);
 			this->menuStrip_main->PerformLayout();
 			this->ResumeLayout(false);
-			this->PerformLayout();
-
+			//this->KeyDown += KeyEventHandler(this, &Wave_renew::mainForm::mainForm_KeyDown);
 		}
 #pragma endregion
 	private:
@@ -1172,8 +1283,7 @@ namespace Wave_renew
 
 			this->button_startCalc->Enabled = false;
 			this->ToolStrip_file_openMap->Enabled = false;
-			//int code = processing();
-			showBottom();
+			int code = processing();
 			this->button_startCalc->Enabled = true;
 			this->ToolStrip_file_openMap->Enabled = true;
 
@@ -1239,14 +1349,7 @@ namespace Wave_renew
 			{
 				this->mainBitmap = gcnew Bitmap(size_x, size_y);
 				vf->pictureBox_main->Image = this->mainBitmap;
-				System::Drawing::Size pbSize = vf->pictureBox_main->Size;
-				//vf->pictureBox_main->Scale(pbSize.Width/size_x, pbSize.Height/size_y);
-				//vf->pictureBox_main->Scale(0.5, 0.5);
 				mainGraphics = Graphics::FromImage(this->mainBitmap);
-			}
-			else
-			{
-				MessageBox::Show("this", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
 			}
 		}
 
@@ -1254,5 +1357,18 @@ namespace Wave_renew
 		{
 			/* put .xml reading here */
 		}
-};
+
+		System::Void mainForm_KeyDown(System::Object^ sender, KeyEventArgs^ e)
+		{
+			if (e->Control && e->KeyCode == Keys::T)
+			{
+				test();
+			}
+		}
+
+		System::Void mainForm_KeyPressed(System::Object^ sender, KeyPressEventArgs^ e)
+		{
+			e->Handled = true;
+		}
+	};
 }
