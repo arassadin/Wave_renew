@@ -94,6 +94,7 @@
     </ClCompile>
     <ClCompile Include="ViewForm.cpp" />
     <ClCompile Include="Wave_renew.cpp" />
+    <ClCompile Include="XMLConfigReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="defines.h" />
@@ -105,6 +106,7 @@
     <ClInclude Include="ViewForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="XMLConfigReader.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc" />

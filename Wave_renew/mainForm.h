@@ -11,6 +11,7 @@
 #include"defines.h"
 #include"ViewForm.h"
 #include <msclr/marshal.h>
+#include"XMLConfigReader.h"
 
 using namespace std;
 using namespace System::Drawing;
@@ -1356,6 +1357,26 @@ namespace Wave_renew
 		System::Void openConfigToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 		{
 			/* put .xml reading here */
+			XMLConfigReader^ cr = gcnew XMLConfigReader("config");
+			point_cnt = cr->pointsQ;
+			point_tmp = cr->points;
+			terr_cnt = cr->blocksQ;
+			terr_tmp = cr->hearth;
+
+			cout << "hearth" << endl;
+			for (int i = 0; i < terr_cnt; i++)
+			{
+				for (int j = 0; j < 10; j++)
+					cout << terr_tmp[i][j] << "_";
+				cout << endl;
+			}
+			cout << "points" << endl;
+			for (int i = 0; i < terr_cnt; i++)
+			{
+				for (int j = 0; j < 2; j++)
+					cout << point_tmp[i][j] << "_";
+				cout << endl;
+			}
 		}
 
 		System::Void mainForm_KeyDown(System::Object^ sender, KeyEventArgs^ e)
