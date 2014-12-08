@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "mainForm.h"
+#include "ViewForm.h"
 
 using namespace Wave_renew;
 
@@ -13,6 +14,7 @@ int main(array<System::String ^> ^args)
 	Application::SetCompatibleTextRenderingDefault(false); 
 
 	// Create the main window and run it
-	Application::Run(gcnew mainForm());
+	mainForm^ mf = gcnew mainForm();
+	Application::Run(mf);
 	return 0;
 }

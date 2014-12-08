@@ -16,6 +16,11 @@
 using namespace std;
 using namespace System::Drawing;
 using namespace msclr::interop;
+using namespace Threading;
+
+public delegate void processCalculationTimeDelegate(String^ s);
+public delegate void generalDefaultsDelegate();
+public delegate void pauseButtonDelegate(bool toggled);
 
 namespace Wave_renew
 {
@@ -71,9 +76,11 @@ namespace Wave_renew
 		Graphics^ mainGraphics;
 		Bitmap^ mainBitmap;
 		String^ mapFileName;
+		Thread^ calculationThread;
+		Thread^ drawingThread;
 
 	public:
-		mainForm(void)
+		mainForm()
 		{
 			InitializeComponent();
 			scaling = 2.0;
@@ -542,7 +549,7 @@ namespace Wave_renew
 			point_tmp[0][1] = 51.609;
 		}
 
-		int processing()
+		int mainForm::processing()
 		{
 			tmp();
 
@@ -624,7 +631,7 @@ namespace Wave_renew
 					if (bottom[y][x] <= 0 && bottom[y][x] >= izobata) 
 						h[y][x] = izobata;
 					else 
-						if (bottom[y][x] >= 0) 
+						if (bottom[y][x] >= 0)  
 							h[y][x] = -1;   //for correct sqrt(-h[j][i]);
 						else 
 							h[y][x] = bottom[y][x];
@@ -677,7 +684,7 @@ namespace Wave_renew
 			//float Koef_Sh=-M_G*Koef_Sheroh*Koef_Sheroh;
 			for (t = 0; t <= time_moments; t++)
 			{
-				this->button_startCalc->Text = System::Convert::ToString(t);
+				this->Invoke_button_startCalc_changeText(System::Convert::ToString(t));
 
 				for (int j = 1; j<size_y - 1; j++)
 				{
@@ -691,7 +698,7 @@ namespace Wave_renew
 							+ 0.5 / delta_y_m[j] * (v_old[j][i + 1] * (h[j][i + 2] + h[j][i + 1]) \
 							- v_old[j][i] * (h[j][i + 1] + h[j][i])) );
 
-						if (i>0 && j>0)
+						if (i > 0 && j > 0)
 						{
 							u[j][i] = u_old[j][i] - (M_G / (2 * delta_x_m)*(eta[j][i] - eta[j - 1][i])
 								- Koef_Koriolisa*v_old[j][i]
@@ -738,8 +745,14 @@ namespace Wave_renew
 				{
 					for (int i = 1; i<size_x - 1; i++)
 					{
-						if (eta[j][i]>15.) { eta[j][i] = 15.; }
-						if (eta[j][i]<-15.) { eta[j][i] = -15.; }
+						if (eta[j][i] > 15.) 
+						{ 
+							eta[j][i] = 15.;
+						}
+						if (eta[j][i] < -15.) 
+						{ 
+							eta[j][i] = -15.; 
+						}
 						// SizeX->Text=FloatToStr(eta[j][i]);
 						if (visota[j][i] < eta[j][i])
 						{ 
@@ -757,12 +770,14 @@ namespace Wave_renew
 				DeltaT->Caption = Format("dt = %3.3f", ARRAYOFCONST((delta_t[0])));
 				*/
 
-				if (t == 20000)
-					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t20000");
-				if (t == 40000)
-					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t40000");
-				if (t == 60000)
-					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t60000");
+				if (t == 300)
+					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t300");
+				if (t == 100)
+					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t100");
+				if (t == 500)
+					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t500");
+				if (t == 1000)
+					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t1000");
 
 				int numberxx = 0;
 				int numberyy = 0;
@@ -866,11 +881,16 @@ namespace Wave_renew
 
 //					vf->pictureBox_main->Update();
 				}
-				if (!running) 
+				if (!running)
+				{
+					this->Invoke_afterCalcDefaults();
 					break;
+				}
 			}
 
 			MessageBox::Show("Modelling Complete!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
+			this->Invoke_afterCalcDefaults();
+
 			return 0;
 		}
 
@@ -1086,7 +1106,7 @@ namespace Wave_renew
 			// 
 			// textBox_outTime
 			// 
-			this->textBox_outTime->Location = System::Drawing::Point(238, 165);
+			this->textBox_outTime->Location = System::Drawing::Point(85, 165);
 			this->textBox_outTime->Name = L"textBox_outTime";
 			this->textBox_outTime->Size = System::Drawing::Size(62, 22);
 			this->textBox_outTime->TabIndex = 22;
@@ -1106,7 +1126,7 @@ namespace Wave_renew
 			// label9
 			// 
 			this->label9->AutoSize = true;
-			this->label9->Location = System::Drawing::Point(166, 168);
+			this->label9->Location = System::Drawing::Point(15, 168);
 			this->label9->Name = L"label9";
 			this->label9->Size = System::Drawing::Size(66, 17);
 			this->label9->TabIndex = 20;
@@ -1220,7 +1240,7 @@ namespace Wave_renew
 			// checkBox_autoSaveLayers
 			// 
 			this->checkBox_autoSaveLayers->AutoSize = true;
-			this->checkBox_autoSaveLayers->Location = System::Drawing::Point(16, 167);
+			this->checkBox_autoSaveLayers->Location = System::Drawing::Point(158, 167);
 			this->checkBox_autoSaveLayers->Name = L"checkBox_autoSaveLayers";
 			this->checkBox_autoSaveLayers->RightToLeft = System::Windows::Forms::RightToLeft::Yes;
 			this->checkBox_autoSaveLayers->Size = System::Drawing::Size(142, 21);
@@ -1272,21 +1292,78 @@ namespace Wave_renew
 			this->menuStrip_main->ResumeLayout(false);
 			this->menuStrip_main->PerformLayout();
 			this->ResumeLayout(false);
-			//this->KeyDown += KeyEventHandler(this, &Wave_renew::mainForm::mainForm_KeyDown);
+			this->PerformLayout();
+
 		}
 #pragma endregion
 	private:
+		void Invoke_button_startCalc_changeText(String^ s)
+		{
+			if (this->button_startCalc->InvokeRequired)
+			{
+				processCalculationTimeDelegate^ d = gcnew processCalculationTimeDelegate(this, &Wave_renew::mainForm::Invoke_button_startCalc_changeText);
+				this->Invoke(d, s);
+			}
+			else
+			{
+				this->button_startCalc->Text = s;
+			}
+		}
+
+		void Invoke_afterCalcDefaults()
+		{
+			if (this->InvokeRequired)
+			{
+				generalDefaultsDelegate^ d = gcnew generalDefaultsDelegate(this, &Wave_renew::mainForm::Invoke_afterCalcDefaults);
+				this->Invoke(d);
+			}
+			else
+			{
+				this->button_startCalc->Enabled = true;
+				this->button_pauseCalc->Enabled = false;
+				this->button_stopCalc->Enabled = false;
+				this->textBox_isobath->Enabled = true;
+				this->ToolStrip_file_openMap->Enabled = true;
+				this->ToolStrip_file_openConfig->Enabled = true;
+				this->button_startCalc->Text = "Start";
+			}
+		}
+
+		void Invoke_pauseButtonClickDelegate(bool toggled)
+		{
+			if (this->button_pauseCalc->InvokeRequired)
+			{
+				pauseButtonDelegate^ d = gcnew pauseButtonDelegate(this, &Wave_renew::mainForm::Invoke_pauseButtonClickDelegate);
+				this->Invoke(d, toggled);
+			}
+			else
+			{
+				if (toggled)
+					this->button_pauseCalc->FlatStyle = FlatStyle::Standard;
+				else
+					this->button_pauseCalc->FlatStyle = FlatStyle::Popup;
+			}
+		}
+
 		System::Void button_startCalc_Click(System::Object^  sender, System::EventArgs^  e)
 		{
-			vf->Show();
+			if (!vf)
+				vf = gcnew ViewForm();
+
+			calculationThread = gcnew Thread(gcnew ThreadStart(this, &Wave_renew::mainForm::blabla));
+			calculationThread->IsBackground = false;
 			
 			running = true;
 
 			this->button_startCalc->Enabled = false;
 			this->ToolStrip_file_openMap->Enabled = false;
-			int code = processing();
-			this->button_startCalc->Enabled = true;
-			this->ToolStrip_file_openMap->Enabled = true;
+			this->ToolStrip_file_openConfig->Enabled = false;
+			this->textBox_isobath->Enabled = false;
+			this->button_pauseCalc->Enabled = true;
+			this->button_stopCalc->Enabled = true;
+
+			vf->Show();
+			calculationThread->Start();
 
 			running = false;
 		}
@@ -1317,7 +1394,6 @@ namespace Wave_renew
 
 		System::Void button_applyParameters_Click(System::Object^  sender, System::EventArgs^  e)
 		{
-			/* save parameters */
 			time_moments = System::Convert::ToInt32(this->textBox_calcTime->Text);
 			output_moments = System::Convert::ToDouble(this->textBox_outTime->Text);
 			izobata = System::Convert::ToDouble(this->textBox_isobath->Text);
@@ -1326,12 +1402,22 @@ namespace Wave_renew
 
 		System::Void button_pauseCalc_Click(System::Object^  sender, System::EventArgs^  e)
 		{
-
+			if (calculationThread->ThreadState == ThreadState::Suspended)
+			{
+				calculationThread->Resume();
+				this->Invoke_pauseButtonClickDelegate(true);
+			}
+			else
+			{
+				calculationThread->Suspend();
+				this->Invoke_pauseButtonClickDelegate(false);
+			}
 		}
 
 		System::Void button_stopCalc_Click(System::Object^  sender, System::EventArgs^  e)
 		{
-
+			calculationThread->Abort();
+			this->Invoke_afterCalcDefaults();
 		}
 
 		System::Void openToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e)
@@ -1354,9 +1440,13 @@ namespace Wave_renew
 			}
 		}
 
+		void blabla()
+		{
+			processing();
+		}
+
 		System::Void openConfigToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 		{
-			/* put .xml reading here */
 			XMLConfigReader^ cr = gcnew XMLConfigReader("config");
 			point_cnt = cr->pointsQ;
 			point_tmp = cr->points;
