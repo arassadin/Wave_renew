@@ -361,7 +361,8 @@ namespace Wave_renew
 
 		void OutHeights(char* fileName)
 		{
-			FILE* outFile = fopen(fileName, "w");
+			ofstream outFile;
+			outFile.open(fileName, ios::out);
 
 			for (int i = 0; i < size_y; i++)
 			{
@@ -380,7 +381,7 @@ namespace Wave_renew
 					else
 						h = bottom[i][j] + LAND_UP;
 
-					fprintf(outFile, "%lf; ", h);
+					outFile << h << "; ";
 				}
 
 				if (bottom[i][size_x - 1] < 0)
@@ -395,21 +396,21 @@ namespace Wave_renew
 				else
 					h = bottom[i][size_x - 1] + LAND_UP;
 
-				fprintf(outFile, "\n");
+				outFile << h << endl;
 			}
 
-			fclose(outFile);
+			outFile.close();
 		}
 
 		bool loadMap()
 		{
-			FILE* infile;
+			ifstream mapFile;
 
-			/* fopen( , "rt") ??? */
-			marshal_context ^ context = gcnew marshal_context();
+			marshal_context^ context = gcnew marshal_context();
 			const char* tmpFileName = context->marshal_as<const char*>(mapFileName);
-					 
-			if ((infile = fopen(tmpFileName, "r")) == NULL)
+				
+			mapFile.open(tmpFileName, ios::in);
+			if (!mapFile)
 			{
 				MessageBox::Show("Input file not found!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
 				return false;
@@ -424,8 +425,8 @@ namespace Wave_renew
 
 			for (int p = 0; p < param_cnt; p++)
 			{
-				std::cout << p << std::endl;
-				fgets(cs, MAX_STR_LEN, infile);
+				mapFile.getline(cs, MAX_STR_LEN);
+
 				String^ s = gcnew String(cs);
 				if (s->ToLower()->IndexOf(sparam[p]) == -1)
 				{
@@ -452,16 +453,7 @@ namespace Wave_renew
 			double _deep;
 			for (int y = 0; y < size_y; y++)
 				for (int x = 0; x < size_x; x++)
-				{
-					_deep=0.0;
-					if (fscanf(infile, "%lf", &_deep))
-						bottom[y][x] = _deep;
-					else
-					{
-						MessageBox::Show("Wrong file format!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
-						return false;
-					}
-				}
+					mapFile >> bottom[y][x];
 
 			this->textBox_rangeX_start->Text = System::Convert::ToString(start_x);
 			this->textBox_rangeX_end->Text = System::Convert::ToString(end_x);
@@ -474,7 +466,7 @@ namespace Wave_renew
 			this->textBox_dx->Text = System::Convert::ToString(delta_x);
 			this->textBox_dy->Text = System::Convert::ToString(delta_y);
 
-			fclose(infile);
+			mapFile.close();
 
 			MessageBox::Show("File Loading Completed!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
 
