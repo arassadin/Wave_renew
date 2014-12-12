@@ -371,14 +371,7 @@ namespace Wave_renew
 				for (int j = 0; j < size_x - 1; j++)
 				{
 					if (bottom[i][j] < 0)
-						if (bottom[i][j] < 0.0)
-						{
-							h = visota[i][j];
-						}
-						else
-						{
-							h = 0.0;
-						}
+						h = visota[i][j];
 					else
 						h = bottom[i][j] + LAND_UP;
 
@@ -386,14 +379,7 @@ namespace Wave_renew
 				}
 
 				if (bottom[i][size_x - 1] < 0)
-					if (bottom[i][size_x - 1] < 0.0)
-					{
-						h = visota[i][size_x - 1];
-					}
-					else
-					{
-						h = 0.0;
-					}
+					h = 0.0;
 				else
 					h = bottom[i][size_x - 1] + LAND_UP;
 
@@ -418,14 +404,7 @@ namespace Wave_renew
 				for (int j = 0; j < size_x - 1; j++)
 				{
 					if (bottom[i][j] < 0)
-						if (bottom[i][j] < 0.0)
-						{
-							h = visota[i][j];
-						}
-						else
-						{
-							h = 0.0;
-						}
+						h = visota[i][j];
 					else
 						h = bottom[i][j] + LAND_UP;
 
@@ -433,14 +412,7 @@ namespace Wave_renew
 				}
 
 				if (bottom[i][size_x - 1] < 0)
-					if (bottom[i][size_x - 1] < 0.0)
-					{
-						h = visota[i][size_x - 1];
-					}
-					else
-					{
-						h = 0.0;
-					}
+					h = visota[i][size_x - 1];
 				else
 					h = bottom[i][size_x - 1] + LAND_UP;
 
