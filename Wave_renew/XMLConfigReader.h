@@ -5,7 +5,7 @@
 using namespace System;
 using namespace System::Xml;
 
-struct Point
+struct __Point
 {
 	Double x;
 	Double y;
@@ -15,7 +15,7 @@ ref class XMLConfigReader
 {
 public:
 	XMLConfigReader(String^);
-	bool parse(XmlReader^ reader);
+	bool parse();
 
 public:
 	Double** points;
@@ -31,6 +31,6 @@ private:
 	void XMLRoutine_Brick(XmlReader^ reader, int blockn);
 	void XMLRoutine_Step(XmlReader^ reader, int blockn);
 	void XMLRoutine_ObservationPoints(XmlReader^ reader);
-	Point* XMLRoutine_Point(XmlReader^ reader);
+	__Point* XMLRoutine_Point(XmlReader^ reader);
 };
 

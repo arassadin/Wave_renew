@@ -21,6 +21,7 @@ using namespace Threading;
 public delegate void processCalculationTimeDelegate(String^ s);
 public delegate void generalDefaultsDelegate();
 public delegate void pauseButtonDelegate(bool toggled);
+public delegate int calculationDelegate();
 
 namespace Wave_renew
 {
@@ -96,7 +97,7 @@ namespace Wave_renew
 		}
 
 	private:
-		double** new_d(int _y, int _x)
+		double** __fastcall new_d(int _y, int _x)
 		{
 			double **_m = new double *[_y + 1];
 			if (!_m) 
@@ -119,7 +120,7 @@ namespace Wave_renew
 			delete _m;
 		}
 
-		int copy_d(double **_dest, double **_src, int _y, int _x)
+		int __fastcall copy_d(double **_dest, double **_src, int _y, int _x)
 		{
 			for (int j = 0; j < _y; j++)
 				if (!memcpy(_dest[j], _src[j], _x*sizeof(double)))
@@ -127,14 +128,14 @@ namespace Wave_renew
 			return 0;
 		}
 
-		void swap_d(double ***_m1, double ***_m2)
+		void __fastcall swap_d(double ***_m1, double ***_m2)
 		{
 			double **tmp = *_m1;
 			*_m1 = *_m2;
 			*_m2 = tmp;
 		}
 
-		Color bottom2col(double h)
+		Color __fastcall bottom2col(double h)
 		{
 			const int h_max = 80; // = sqrt(5000)
 			const int h_min = -110;// = -sqrt(10000)
@@ -149,7 +150,7 @@ namespace Wave_renew
 				return Color::FromArgb(0, 0, 255 - h * 255 / h_min);
 		}
 
-		Color eta2col(double h)
+		Color __fastcall eta2col(double h)
 		{
 			const int h_max = 72; // = sqrt(5000)
 			const int h_minmax = 10; // = sqrt(25)
@@ -205,7 +206,7 @@ namespace Wave_renew
 				}
 		}
 
-		Color h2col(double h)
+		Color __fastcall h2col(double h)
 		{
 			const int h_max = 71; // = sqrt(5000)
 			const int h_minmax = 10;// = sqrt(400)
@@ -222,7 +223,7 @@ namespace Wave_renew
 			//   return (Color) RGB(0, 0, 0);;
 		}
 
-		int show_d(double **m, int size_y, int size_x, int scaling)
+		int __fastcall show_d(double **m, int size_y, int size_x, int scaling)
 		{
 			if (!m) 
 				return 1;
@@ -359,10 +360,10 @@ namespace Wave_renew
 				vf->pictureBox_main->Update();
 		}
 
-		void OutHeights(char* fileName)
+		void __fastcall OutHeights(string fileName)
 		{
 			ofstream outFile;
-			outFile.open(fileName, ios::out);
+			outFile.open(fileName.c_str(), ios::out);
 
 			for (int i = 0; i < size_y; i++)
 			{
@@ -402,7 +403,54 @@ namespace Wave_renew
 			outFile.close();
 		}
 
-		bool loadMap()
+		void __fastcall OutHeights(int time)
+		{
+			char tmpFileName[14];
+
+			sprintf(tmpFileName, "out_t=%06d", time);
+
+			ofstream outFile;
+			outFile.open(tmpFileName, ios::out);
+
+			for (int i = 0; i < size_y; i++)
+			{
+				double h(0.0);
+				for (int j = 0; j < size_x - 1; j++)
+				{
+					if (bottom[i][j] < 0)
+						if (bottom[i][j] < 0.0)
+						{
+							h = visota[i][j];
+						}
+						else
+						{
+							h = 0.0;
+						}
+					else
+						h = bottom[i][j] + LAND_UP;
+
+					outFile << h << "; ";
+				}
+
+				if (bottom[i][size_x - 1] < 0)
+					if (bottom[i][size_x - 1] < 0.0)
+					{
+						h = visota[i][size_x - 1];
+					}
+					else
+					{
+						h = 0.0;
+					}
+				else
+					h = bottom[i][size_x - 1] + LAND_UP;
+
+				outFile << h << endl;
+			}
+
+			outFile.close();
+		}
+
+		bool __fastcall loadMap()
 		{
 			ifstream mapFile;
 
@@ -435,7 +483,7 @@ namespace Wave_renew
 				}
 				int pos = s->IndexOf("=");
 				if (p != 7)
-					param[p] = System::Convert::ToInt32(s->Substring(pos + 1, s->Length - pos - 1)->Trim());
+					param[p] = System::Convert::ToDouble(s->Substring(pos + 1, s->Length - pos - 1)->Trim());
 			}
 
 			//version = param[0];
@@ -478,7 +526,7 @@ namespace Wave_renew
 			mainBitmap->Save("output_t" + System::Convert::ToString(time) + ".bmp");
 		}
 
-		void fill_tetragon(int** terr, int v,
+		void __fastcall fill_tetragon(int** terr, int v,
 			int mini, int minj, int maxi, int maxj,
 			int i1, int j1,
 			int i2, int j2,
@@ -502,7 +550,7 @@ namespace Wave_renew
 			}
 		}
 
-		void tmp()
+		void __fastcall tmp()
 		{
 			terr_cnt = 2;
 
@@ -541,7 +589,7 @@ namespace Wave_renew
 			point_tmp[0][1] = 51.609;
 		}
 
-		int mainForm::processing()
+		int __fastcall mainForm::processing()
 		{
 			tmp();
 
@@ -762,21 +810,14 @@ namespace Wave_renew
 				DeltaT->Caption = Format("dt = %3.3f", ARRAYOFCONST((delta_t[0])));
 				*/
 
-				if (t == 300)
-					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t300");
-				if (t == 100)
-					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t100");
-				if (t == 500)
-					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t500");
-				if (t == 1000)
-					OutHeights("C:\\Users\\Alexandr\\Desktop\\out_t1000");
-
 				int numberxx = 0;
 				int numberyy = 0;
 
-				if (t%output_moments == 0)
+				if (output_moments <= t && t % output_moments == 0)
 				{
 					//MessageBox::Show(System::Convert::ToString(t), "TimeOut", MessageBoxButtons::OK, MessageBoxIcon::Information);
+					if (this->checkBox_autoSaveLayers->Checked)
+						OutHeights(t);
 
 					for (int jpoint = 0; jpoint < point_cnt; jpoint++)
 					{
@@ -913,6 +954,11 @@ namespace Wave_renew
 			MessageBox::Show("ok", "ok", MessageBoxButtons::OK, MessageBoxIcon::None);
 			//showBottom();
 			return 0;
+		}
+
+		void blabla()
+		{
+			processing();
 		}
 
 #pragma region Windows Form Designer generated code
@@ -1342,6 +1388,7 @@ namespace Wave_renew
 			if (!vf)
 				vf = gcnew ViewForm();
 
+			calculationDelegate^ d = gcnew calculationDelegate(this, &Wave_renew::mainForm::processing);
 			calculationThread = gcnew Thread(gcnew ThreadStart(this, &Wave_renew::mainForm::blabla));
 			calculationThread->IsBackground = false;
 			
@@ -1380,14 +1427,13 @@ namespace Wave_renew
 
 		System::Void checkBox_autoSaveLayers_CheckedChanged(System::Object^  sender, System::EventArgs^  e)
 		{
-			this->button_startCalc->Enabled = false;
-			checkReadyForCalculationState();
+
 		}
 
 		System::Void button_applyParameters_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			time_moments = System::Convert::ToInt32(this->textBox_calcTime->Text);
-			output_moments = System::Convert::ToDouble(this->textBox_outTime->Text);
+			output_moments = System::Convert::ToInt32(this->textBox_outTime->Text);
 			izobata = System::Convert::ToDouble(this->textBox_isobath->Text);
 			this->button_startCalc->Enabled = true;
 		}
@@ -1432,33 +1478,38 @@ namespace Wave_renew
 			}
 		}
 
-		void blabla()
-		{
-			processing();
-		}
-
 		System::Void openConfigToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 		{
-			XMLConfigReader^ cr = gcnew XMLConfigReader("config");
-			point_cnt = cr->pointsQ;
-			point_tmp = cr->points;
-			terr_cnt = cr->blocksQ;
-			terr_tmp = cr->hearth;
+			XMLConfigReader^ cr = gcnew XMLConfigReader("C:\\Users\\Alexandr\\Desktop\\config.xml");
+			cr->parse();
 
-			cout << "hearth" << endl;
+			int x = 0;
+			//point_cnt = cr->pointsQ;
+			//point_tmp = cr->points;
+			//terr_cnt = cr->blocksQ;
+			//terr_tmp = cr->hearth;
+			//ofstream out;
+			//out.open("outttt", ios::out);
+
+			//out << cr->pointsQ << "_" << cr->blocksQ << endl;
+			/*
+			out << "hearth" << endl;
 			for (int i = 0; i < terr_cnt; i++)
 			{
 				for (int j = 0; j < 10; j++)
-					cout << terr_tmp[i][j] << "_";
-				cout << endl;
+					out << terr_tmp[i][j] << "_";
+				out << endl;
 			}
-			cout << "points" << endl;
+			out << "points" << endl;
 			for (int i = 0; i < terr_cnt; i++)
 			{
 				for (int j = 0; j < 2; j++)
-					cout << point_tmp[i][j] << "_";
-				cout << endl;
+					out << point_tmp[i][j] << "_";
+				out << endl;
 			}
+
+			out.close();
+			*/
 		}
 
 		System::Void mainForm_KeyDown(System::Object^ sender, KeyEventArgs^ e)
