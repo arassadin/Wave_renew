@@ -47,14 +47,14 @@ namespace Wave_renew
 			// 
 			this->pictureBox_main->Location = System::Drawing::Point(-1, 0);
 			this->pictureBox_main->Name = L"pictureBox_main";
-			this->pictureBox_main->Size = System::Drawing::Size(800, 377);
-			this->pictureBox_main->SizeMode = System::Windows::Forms::PictureBoxSizeMode::AutoSize;
+			this->pictureBox_main->Size = System::Drawing::Size(800, 432);
+			this->pictureBox_main->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
 			this->pictureBox_main->TabIndex = 0;
 			this->pictureBox_main->TabStop = false;
 			// 
 			// button_ShowHeight
 			// 
-			this->button_ShowHeight->Location = System::Drawing::Point(140, 390);
+			this->button_ShowHeight->Location = System::Drawing::Point(189, 438);
 			this->button_ShowHeight->Name = L"button_ShowHeight";
 			this->button_ShowHeight->Size = System::Drawing::Size(101, 31);
 			this->button_ShowHeight->TabIndex = 1;
@@ -64,7 +64,7 @@ namespace Wave_renew
 			// 
 			// button_ShowDisturbance
 			// 
-			this->button_ShowDisturbance->Location = System::Drawing::Point(281, 390);
+			this->button_ShowDisturbance->Location = System::Drawing::Point(330, 438);
 			this->button_ShowDisturbance->Name = L"button_ShowDisturbance";
 			this->button_ShowDisturbance->Size = System::Drawing::Size(146, 31);
 			this->button_ShowDisturbance->TabIndex = 2;
@@ -74,7 +74,7 @@ namespace Wave_renew
 			// 
 			// button_SaveLayer
 			// 
-			this->button_SaveLayer->Location = System::Drawing::Point(464, 390);
+			this->button_SaveLayer->Location = System::Drawing::Point(513, 438);
 			this->button_SaveLayer->Name = L"button_SaveLayer";
 			this->button_SaveLayer->Size = System::Drawing::Size(101, 31);
 			this->button_SaveLayer->TabIndex = 3;
@@ -93,10 +93,9 @@ namespace Wave_renew
 			this->Controls->Add(this->pictureBox_main);
 			this->Name = L"ViewForm";
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
-			this->Text = L"Calculation";
+			this->Text = L"Drawing";
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox_main))->EndInit();
 			this->ResumeLayout(false);
-			this->PerformLayout();
 
 		}
 #pragma endregion

@@ -11,7 +11,6 @@ int t;
 double *delta_t;
 int time_moments;
 int output_moments=30;
-int file_count;  // count of bmp files
 bool running = false;
 long int size_x, size_y;      // Sizes of matrix
 double start_x, end_x;      // Range X (parallels) (degrees)
@@ -39,5 +38,3 @@ double **point_points;   // Point's corners coordinates
 
 double **terr_tmp;    // Brick's corners coordinates
 double **point_tmp;   // Point's corners coordinates
-
-double scaling;

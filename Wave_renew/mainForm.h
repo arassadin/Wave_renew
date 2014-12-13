@@ -22,6 +22,7 @@ public delegate void processCalculationTimeDelegate(String^ s);
 public delegate void generalDefaultsDelegate();
 public delegate void pauseButtonDelegate(bool toggled);
 public delegate int calculationDelegate();
+public delegate void updateDrawDelegate();
 
 namespace Wave_renew
 {
@@ -84,7 +85,6 @@ namespace Wave_renew
 		mainForm()
 		{
 			InitializeComponent();
-			scaling = 2.0;
 		}
 
 	protected:
@@ -97,7 +97,7 @@ namespace Wave_renew
 		}
 
 	private:
-		double** __fastcall new_d(int _y, int _x)
+		double** new_d(int _y, int _x)
 		{
 			double **_m = new double *[_y + 1];
 			if (!_m) 
@@ -120,7 +120,7 @@ namespace Wave_renew
 			delete _m;
 		}
 
-		int __fastcall copy_d(double **_dest, double **_src, int _y, int _x)
+		int copy_d(double **_dest, double **_src, int _y, int _x)
 		{
 			for (int j = 0; j < _y; j++)
 				if (!memcpy(_dest[j], _src[j], _x*sizeof(double)))
@@ -128,14 +128,14 @@ namespace Wave_renew
 			return 0;
 		}
 
-		void __fastcall swap_d(double ***_m1, double ***_m2)
+		void swap_d(double ***_m1, double ***_m2)
 		{
 			double **tmp = *_m1;
 			*_m1 = *_m2;
 			*_m2 = tmp;
 		}
 
-		Color __fastcall bottom2col(double h)
+		Color bottom2color(double h)
 		{
 			const int h_max = 80; // = sqrt(5000)
 			const int h_min = -110;// = -sqrt(10000)
@@ -150,7 +150,7 @@ namespace Wave_renew
 				return Color::FromArgb(0, 0, 255 - h * 255 / h_min);
 		}
 
-		Color __fastcall eta2col(double h)
+		Color eta2color(double h)
 		{
 			const int h_max = 72; // = sqrt(5000)
 			const int h_minmax = 10; // = sqrt(25)
@@ -158,7 +158,8 @@ namespace Wave_renew
 			if (h >= LAND_UP)
 			{
 				h = sqrt(h - LAND_UP);
-				return Color::FromArgb(0, 55 + h * 200 / h_max, 0);
+				//return Color::FromArgb(0, 55 + h * 200 / h_max, 0);
+				return Color::FromArgb(0, 255, 0);
 			}
 			else 
 				if (h <= h_maxmax)
@@ -206,7 +207,7 @@ namespace Wave_renew
 				}
 		}
 
-		Color __fastcall h2col(double h)
+		Color height2color(double h)
 		{
 			const int h_max = 71; // = sqrt(5000)
 			const int h_minmax = 10;// = sqrt(400)
@@ -220,147 +221,67 @@ namespace Wave_renew
 				if (h > 0) h = sqrt(h); else if (h < 0) h = -sqrt(-h);
 				return Color::FromArgb(0, 0, 127 + h * 127 / h_minmax);
 			}
-			//   return (Color) RGB(0, 0, 0);;
 		}
-
-		int __fastcall show_d(double **m, int size_y, int size_x, int scaling)
-		{
-			if (!m) 
-				return 1;
-
-			/*is needed?
-			if (running)
-				pBitmap->Width = floor(size_x / scaling) + 2 * SCALE_WIDTH;
-			else
-				pBitmap->Width = floor(size_x / scaling);
-			pBitmap->Height = floor(size_y / scaling);
-			*/
-
-			//Drawing
-			//******************************************************************************
-			for (int y = 0; y < floor(size_y / scaling); y++)
-			{
-				for (int x = 0; x < floor(size_x / scaling); x++)
-				{
-					double h = 0;
-					for (int sy = 0; sy < scaling; sy++)
-						for (int sx = 0; sx < scaling; sx++)
-							h += m[scaling*y + sy][scaling*x + sx];
-					this->mainBitmap->SetPixel(x, floor(size_y / scaling) - 1 - y, bottom2col(h / (scaling*scaling)));
-				}
-			}
-			//******************************************************************************
-
-			for (int longitude = System::Convert::ToInt32(this->textBox_rangeY_end->Text); longitude > System::Convert::ToInt32(this->textBox_rangeY_start->Text); longitude--)
-			{
-				/* is needed?
-				pBitmap->Canvas->Font->Color = Color::Black;
-				*/
-
-				/* find similar */
-				//pBitmap->Canvas->TextOut( 0, (StrToInt(Form1->EndY->Text) - longitude) * 60 / scaling, \
-											Format("%d", OPENARRAY(TVarRec, (longitude))) );
-			}
-			for (int latitude = System::Convert::ToInt32(this->textBox_rangeX_start->Text); latitude <= System::Convert::ToInt32(this->textBox_rangeX_end->Text); latitude++)
-			{
-				/* is needed?
-				pBitmap->Canvas->Font->Color = Color::Black;
-				*/
-
-				/* find similar */
-				//pBitmap->Canvas->TextOut((latitude - System::Convert::ToInt32(Form1->StartX->Text)) * 60 / scaling, (size_x / scaling - 14), \
-											Format("%d", OPENARRAY(TVarRec, (latitude))) );
-			}
-			return 0;
-		}
-
-		/* is needed?
-		void form_prepare()
-		{
-			scaling = System::Convert::ToInt32(Form1->ScalingX->Text);
-			if (scaling < 1 || scaling > 30) return;
-			if (running)
-				Form2->ClientWidth = floor(size_x / scaling) > MAX_FORM_SIZE ?
-			MAX_FORM_SIZE :
-						  floor(size_x / scaling) + 2 * SCALE_WIDTH;
-			else
-				Form2->ClientWidth = floor(size_x / scaling) > MAX_FORM_SIZE ?
-			MAX_FORM_SIZE :
-						  floor(size_x / scaling);
-
-			Form2->ClientHeight = floor(size_y / scaling) > MAX_FORM_SIZE ?
-			MAX_FORM_SIZE :
-						  floor(size_y / scaling);
-			//   offset_x = 0, offset_y = 0;
-			Form2->Invalidate(); // For immediately form repaint after it's shows
-		}
-		*/
 
 		void showBottom()
 		{
-			show_d(bottom, size_y, size_x, scaling);
+			for (int y = 0; y < size_y; y++)
+			{
+				for (int x = 0; x < size_x; x++)
+				{
+					this->mainBitmap->SetPixel(x, size_y - 1 - y, bottom2color(bottom[y][x]));
+				}
+			}
+
+			this->Invoke_updateDraw();
 		}
 
 		void showDisturbance()
 		{
-			if (!eta) return;
-			/* is needed?
-			form_prepare();
-			*/
+			if (!eta) 
+				return;
+
 			double **a = new_d(size_y, size_x);
-			for (int j = 0; j < size_y; j++)
-				for (int i = 0; i < size_x; i++)
-					if (bottom[j][i] < 0)
-						a[j][i] = eta[j][i];
+			for (int y = 0; y < size_y; y++)
+				for (int x = 0; x < size_x; x++)
+					if (bottom[y][x] < 0)
+					{
+						double val = eta[y][x];
+						this->mainBitmap->SetPixel(x, size_y - 1 - y, eta2color(val));
+					}
 					else
-						a[j][i] = bottom[j][i] + LAND_UP;
+					{
+						double val = bottom[y][x] + LAND_UP;
+						this->mainBitmap->SetPixel(x, size_y - 1 - y, eta2color(val));
+					}
 
-			if (show_d(a, size_y, size_x, scaling))
-				vf->Hide();
-			else
-				vf->Show();
-
-			delete_d(a);
-			if (!running)
-				vf->pictureBox_main->Update();
+			this->Invoke_updateDraw();
 		}
 
 		void ShowHeights()
 		{
-			/* if needed
-			form_prepare();
-			*/
-
 			double **a = new_d(size_y, size_x);
-			for (int i = 0; i < size_y; i++)
+			for (int y = 0; y < size_y; y++)
 			{
-				for (int i = 0; i < size_x; i++)
+				for (int x = 0; x < size_x; x++)
 				{
-					if (bottom[i][i] < 0)
-						if (bottom[i][i] < 0.0)
-						{
-							a[i][i] = visota[i][i];
-						}
-						else
-						{
-							a[i][i] = 0;
-						}
+					if (bottom[y][x] < 0)
+					{
+						double val = visota[y][x];
+						this->mainBitmap->SetPixel(x, size_y - 1 - y, height2color(val));
+					}
 					else
-						a[i][i] = bottom[i][i] + LAND_UP;
+					{
+						double val = bottom[y][x] + LAND_UP;
+						this->mainBitmap->SetPixel(x, size_y - 1 - y, height2color(val));
+					}
 				}
 			}
 
-			if (show_d(a, size_y, size_x, scaling))
-				vf->Hide();
-			else
-				vf->Show();
-
-			delete_d(a);
-			if (!running)
-				vf->pictureBox_main->Update();
+			this->Invoke_updateDraw();
 		}
 
-		void __fastcall OutHeights(string fileName)
+		void OutHeights(string fileName)
 		{
 			ofstream outFile;
 			outFile.open(fileName.c_str(), ios::out);
@@ -389,11 +310,11 @@ namespace Wave_renew
 			outFile.close();
 		}
 
-		void __fastcall OutHeights(int time)
+		void OutHeights(int time)
 		{
 			char tmpFileName[14];
 
-			sprintf(tmpFileName, "out_t=%06d", time);
+			sprintf_s(tmpFileName, "out_t=%06d", time);
 
 			ofstream outFile;
 			outFile.open(tmpFileName, ios::out);
@@ -422,7 +343,7 @@ namespace Wave_renew
 			outFile.close();
 		}
 
-		bool __fastcall loadMap()
+		bool loadMap()
 		{
 			ifstream mapFile;
 
@@ -455,7 +376,7 @@ namespace Wave_renew
 				}
 				int pos = s->IndexOf("=");
 				if (p != 7)
-					param[p] = System::Convert::ToDouble(s->Substring(pos + 1, s->Length - pos - 1)->Trim());
+					param[p] = (int)System::Convert::ToDouble(s->Substring(pos + 1, s->Length - pos - 1)->Trim());
 			}
 
 			//version = param[0];
@@ -470,7 +391,6 @@ namespace Wave_renew
 				delete_d(bottom);
 			bottom = new_d(size_y, size_x);
 
-			double _deep;
 			for (int y = 0; y < size_y; y++)
 				for (int x = 0; x < size_x; x++)
 					mapFile >> bottom[y][x];
@@ -498,7 +418,7 @@ namespace Wave_renew
 			mainBitmap->Save("output_t" + System::Convert::ToString(time) + ".bmp");
 		}
 
-		void __fastcall fill_tetragon(int** terr, int v,
+		void fill_tetragon(int** terr, int v,
 			int mini, int minj, int maxi, int maxj,
 			int i1, int j1,
 			int i2, int j2,
@@ -522,7 +442,7 @@ namespace Wave_renew
 			}
 		}
 
-		void __fastcall tmp()
+		void tmp()
 		{
 			terr_cnt = 2;
 
@@ -561,7 +481,7 @@ namespace Wave_renew
 			point_tmp[0][1] = 51.609;
 		}
 
-		int __fastcall mainForm::processing()
+		int mainForm::processing()
 		{
 			tmp();
 
@@ -632,10 +552,8 @@ namespace Wave_renew
 
 			time_moments = System::Convert::ToInt32(this->textBox_calcTime->Text);
 			output_moments = System::Convert::ToInt32(this->textBox_outTime->Text);
-			file_count = 1;
 
 			//****************************************************************************
-			//first problem
 			for (int y = 0; y<size_y; y++) 
 			{
 				for (int x = 0; x < size_x; x++) 
@@ -680,7 +598,6 @@ namespace Wave_renew
 			delta_x_m = delta_x*M_PI * 6365500 / 180;
 
 			//***************************************************************************
-			//Second problem
 			for (int j = 0; j<size_y; j++)
 			{
 				delta_y_m[j] = delta_x_m*cos((start_y + j*delta_y) / 180.0*M_PI);
@@ -689,9 +606,9 @@ namespace Wave_renew
 			//   if (delta_t > delta_y_m/sqrt(2*M_G*9500))
 			//      delta_t = delta_y_m/sqrt(2*M_G*9500);
 
-			float dlina_ekvatora = 40076;
-			float vremya_oborota_zemli = 365 * 24 * 60 * 60 + 6 * 60 * 60 + 9 * 60 + 9;
-			float skor_zemli = dlina_ekvatora / vremya_oborota_zemli;
+			double dlina_ekvatora(40076);
+			double vremya_oborota_zemli = 365 * 24 * 60 * 60 + 6 * 60 * 60 + 9 * 60 + 9;
+			double skor_zemli = dlina_ekvatora / vremya_oborota_zemli;
 			//float Koef_Sheroh=0.002;
 			//float Koef_Sh=-M_G*Koef_Sheroh*Koef_Sheroh;
 			for (t = 0; t <= time_moments; t++)
@@ -700,7 +617,7 @@ namespace Wave_renew
 
 				for (int j = 1; j<size_y - 1; j++)
 				{
-					float Koef_Koriolisa = 2 * skor_zemli*cos((start_y + j*delta_y) / 180.0*M_PI);
+					double Koef_Koriolisa = 2 * skor_zemli*cos((start_y + j*delta_y) / 180.0*M_PI);
 					for (int i = 1; i<size_x - 1; i++)
 					{
 						if (i<size_x - 2 && j<size_y - 2)
@@ -777,114 +694,23 @@ namespace Wave_renew
 				swap_d(&v_old, &v);
 				swap_d(&u_old, &u);
 
-				/* modify to new style
-				Process->Caption = "Time = " + System::Convert::ToString(t);
-				DeltaT->Caption = Format("dt = %3.3f", ARRAYOFCONST((delta_t[0])));
-				*/
-
-				int numberxx = 0;
-				int numberyy = 0;
-
 				if (output_moments <= t && t % output_moments == 0)
 				{
+					showDisturbance();
+
 					//MessageBox::Show(System::Convert::ToString(t), "TimeOut", MessageBoxButtons::OK, MessageBoxIcon::Information);
 					if (this->checkBox_autoSaveLayers->Checked)
 						OutHeights(t);
-
-					for (int jpoint = 0; jpoint < point_cnt; jpoint++)
-					{
-						for (int ipoint = 0; ipoint < 2; ipoint++)
-						{
-							point_points[ipoint][jpoint] = point_tmp[jpoint][ipoint];
-							numberxx = int(((point_points[0][jpoint] - start_x) / delta_x + 0.5));
-							numberyy = int(((point_points[1][jpoint] - start_y) / delta_y + 0.5));
-							//int rx=a;
-							//int ry=b;
-						}
-					}
-
-//					showDisturbance();
-
+					
+					/*
 					int h = (int)(delta_t[0] * t) / 3600;
-					int m = ((int)(delta_t[0] * t) - h * 3600) / 60;
+					int m = (int)((delta_t[0] * t) - h * 3600) / 60;
 					int s = (int)(delta_t[0] * t) - h * 3600 - m * 60;
-
-					/* is needed?
-					Color c1 = pBitmap->Canvas->Brush->Color, c2 = pBitmap->Canvas->Font->Color;
-					*/
-
-					/* is needed?
-					pBitmap->Canvas->Brush->Color = Color::Black;
-					*/
-
-					//old: pBitmap->Canvas->Font->Color = Color::Red;
-					//old: pBitmap->Canvas->Font->Size = 1;
-					System::Drawing::Font^ font=gcnew System::Drawing::Font(FontFamily::GenericSansSerif, 1.0F);
-					SolidBrush^ fontBrush=gcnew SolidBrush(Color::Red);
-					// ---------------------------------------------
-
-					//old: pBitmap->Canvas->TextRect( Rect(50, 50, 50 + pBitmap->Canvas->TextWidth("00'00'00"), 50 + pBitmap->Canvas->TextHeight("00'00'00")), \
-						50, 50, Format("%2.2d\'%2.2d\'%2.2d", OPENARRAY(TVarRec, (h, m, s))));
-					RectangleF r(50, 50, 0, 0);
-//					this->mainGraphics->DrawString("", font, fontBrush, r);
-					// ----------------------------------------------------------------------
-
-					//old: pBitmap->Canvas->Brush->Color = Color::Silver;
-					//pBitmap->Canvas->FillRect(Rect(floor(size_x / scaling), 0, pBitmap->Width, pBitmap->Height));
-					SolidBrush^ sb = gcnew SolidBrush(Color::Silver);
-					r.X = floor(size_x / scaling);
-					r.Y = 0;
-					r.Width = this->mainBitmap->Width;
-					r.Height = this->mainBitmap->Height;
-//					this->mainGraphics->FillRectangle(sb, r);
-					// -------------------------------------------------
-
-					for (float j = 15; j <= 30; j += 0.5) 
-					{
-						//old: pBitmap->Canvas->Brush->Color = eta2col(j - 15); //(j-15); //eta2col(j-10);
-						//pBitmap->Canvas->FillRect(Rect(SCALE_WIDTH / 4 + floor(size_x / scaling), \
-							SCALE_WIDTH / 2 + (30 - j)*(pBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30, \
-							SCALE_WIDTH + floor(size_x / scaling), \
-							SCALE_WIDTH / 2 + (30 - j + 1)*(pBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30));
-						sb = gcnew SolidBrush(eta2col(j - 15));
-						r.X = SCALE_WIDTH / 4 + floor(size_x / scaling);
-						r.Y = SCALE_WIDTH / 2 + (30 - j)*(this->mainBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30;
-						r.Width = SCALE_WIDTH + floor(size_x / scaling);
-						r.Height = SCALE_WIDTH / 2 + (30 - j + 1)*(this->mainBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30;
-//						this->mainGraphics->FillRectangle(sb, r);
-						// --------------------------------------------------------------------------------
-					}
-					for (float j = 15; j <= 30; j += 0.5) 
-					{
-						// pBitmap->Canvas->Font->Color = clBlack;
-
-						//old: pBitmap->Canvas->Brush->Color = Color::Silver;
-						//pBitmap->Canvas->Font->Color = RGB(0, 0, 127 + j);
-						//int x1 = SCALE_WIDTH + floor(size_x / scaling);
-						//int y1 = -pBitmap->Canvas->TextHeight("0000") + \
-							SCALE_WIDTH / 4 + (30 - j + 1)*(pBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30;
-						//pBitmap->Canvas->TextOut(SCALE_WIDTH + floor(size_x / scaling), \
-							-pBitmap->Canvas->TextHeight("0000") + \
-							//pBitmap->Height/2 + \
-							SCALE_WIDTH / 4 + (30 - j + 1)*(pBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30, \
-							Format("%f", OPENARRAY(TVarRec, (j - 15))));//shkala visota
-						sb = gcnew SolidBrush(Color::Silver);
-						fontBrush = gcnew SolidBrush(Color::FromArgb(255, 0, 0, 127+j));
-						PointF point(SCALE_WIDTH + floor(size_x / scaling), \
-									-1.0 + SCALE_WIDTH / 4 + (30 - j + 1)*(this->mainBitmap->Height*1.5 - SCALE_WIDTH / 2) / 30);
-//						this->mainGraphics->DrawString("", font, fontBrush, point);
-						// ---------------------------------------------------
-					}
-
-					/* is needed?
-					pBitmap->Canvas->Brush->Color = c1; pBitmap->Canvas->Font->Color = c2;
 					*/
 
 //					if (this->checkBox_autoSaveLayers->Checked)
 //						SaveBmp(t);
-					file_count++;
 
-//					vf->pictureBox_main->Update();
 				}
 				if (!running)
 				{
@@ -1307,6 +1133,19 @@ namespace Wave_renew
 		}
 #pragma endregion
 	private:
+		void Invoke_updateDraw()
+		{
+			if (vf->pictureBox_main->InvokeRequired)
+			{
+				updateDrawDelegate^ d = gcnew updateDrawDelegate(this, &Wave_renew::mainForm::Invoke_updateDraw);
+				this->Invoke(d);
+			}
+			else
+			{
+				vf->Refresh();
+			}
+		}
+
 		void Invoke_button_startCalc_changeText(String^ s)
 		{
 			if (this->button_startCalc->InvokeRequired)
@@ -1357,15 +1196,13 @@ namespace Wave_renew
 
 		System::Void button_startCalc_Click(System::Object^  sender, System::EventArgs^  e)
 		{
-			if (!vf)
-				vf = gcnew ViewForm();
-
 			calculationDelegate^ d = gcnew calculationDelegate(this, &Wave_renew::mainForm::processing);
 			calculationThread = gcnew Thread(gcnew ThreadStart(this, &Wave_renew::mainForm::blabla));
 			calculationThread->IsBackground = false;
 			
 			running = true;
 
+			this->button_applyParameters->Enabled = false;
 			this->button_startCalc->Enabled = false;
 			this->ToolStrip_file_openMap->Enabled = false;
 			this->ToolStrip_file_openConfig->Enabled = false;
@@ -1387,6 +1224,13 @@ namespace Wave_renew
 
 		System::Void textBox_outTime_TextChanged(System::Object^  sender, System::EventArgs^  e)
 		{
+			if (this->textBox_outTime->Text != "")
+			{
+				if (System::Convert::ToDouble(this->textBox_outTime->Text))
+				{
+					output_moments = System::Convert::ToInt32(this->textBox_outTime->Text);
+				}
+			}
 			this->button_startCalc->Enabled = false;
 			checkReadyForCalculationState();
 		}
@@ -1404,6 +1248,7 @@ namespace Wave_renew
 
 		System::Void button_applyParameters_Click(System::Object^  sender, System::EventArgs^  e)
 		{
+			this->button_applyParameters->Enabled = false;
 			time_moments = System::Convert::ToInt32(this->textBox_calcTime->Text);
 			output_moments = System::Convert::ToInt32(this->textBox_outTime->Text);
 			izobata = System::Convert::ToDouble(this->textBox_isobath->Text);
@@ -1440,14 +1285,22 @@ namespace Wave_renew
 			{
 				mapFileName = openMap->FileName;
 			}
-			vf = gcnew ViewForm();
 
+			this->Enabled = false;
 			if (this->loadMap())
 			{
+				if (vf)
+					delete vf;
+				vf = gcnew ViewForm();
+				if (mainBitmap)
+					delete mainBitmap;
 				this->mainBitmap = gcnew Bitmap(size_x, size_y);
 				vf->pictureBox_main->Image = this->mainBitmap;
 				mainGraphics = Graphics::FromImage(this->mainBitmap);
+				showBottom();
+				vf->Show();
 			}
+			this->Enabled = true;
 		}
 
 		System::Void openConfigToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
