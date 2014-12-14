@@ -198,7 +198,7 @@ namespace Wave_renew
 						if (h > -h_maxmax)
 							return Color::FromArgb(0, 0, 70 + h * 70 / h_maxmax);
 						else
-							return Color::FromArgb(125, 25, 225);//RGB(0, 0, 0);
+							return Color::FromArgb(125, 25, 225);
 				}
 				else
 				{
