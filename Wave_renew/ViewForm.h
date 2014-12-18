@@ -46,17 +46,19 @@ namespace Wave_renew
 			// pictureBox_main
 			// 
 			this->pictureBox_main->Location = System::Drawing::Point(-1, 0);
+			this->pictureBox_main->Margin = System::Windows::Forms::Padding(2, 2, 2, 2);
 			this->pictureBox_main->Name = L"pictureBox_main";
-			this->pictureBox_main->Size = System::Drawing::Size(800, 432);
+			this->pictureBox_main->Size = System::Drawing::Size(600, 351);
 			this->pictureBox_main->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
 			this->pictureBox_main->TabIndex = 0;
 			this->pictureBox_main->TabStop = false;
 			// 
 			// button_ShowHeight
 			// 
-			this->button_ShowHeight->Location = System::Drawing::Point(189, 438);
+			this->button_ShowHeight->Location = System::Drawing::Point(142, 356);
+			this->button_ShowHeight->Margin = System::Windows::Forms::Padding(2, 2, 2, 2);
 			this->button_ShowHeight->Name = L"button_ShowHeight";
-			this->button_ShowHeight->Size = System::Drawing::Size(101, 31);
+			this->button_ShowHeight->Size = System::Drawing::Size(76, 25);
 			this->button_ShowHeight->TabIndex = 1;
 			this->button_ShowHeight->Text = L"Show Height";
 			this->button_ShowHeight->UseVisualStyleBackColor = true;
@@ -64,9 +66,10 @@ namespace Wave_renew
 			// 
 			// button_ShowDisturbance
 			// 
-			this->button_ShowDisturbance->Location = System::Drawing::Point(330, 438);
+			this->button_ShowDisturbance->Location = System::Drawing::Point(248, 356);
+			this->button_ShowDisturbance->Margin = System::Windows::Forms::Padding(2, 2, 2, 2);
 			this->button_ShowDisturbance->Name = L"button_ShowDisturbance";
-			this->button_ShowDisturbance->Size = System::Drawing::Size(146, 31);
+			this->button_ShowDisturbance->Size = System::Drawing::Size(110, 25);
 			this->button_ShowDisturbance->TabIndex = 2;
 			this->button_ShowDisturbance->Text = L"Show Disturbance";
 			this->button_ShowDisturbance->UseVisualStyleBackColor = true;
@@ -74,9 +77,10 @@ namespace Wave_renew
 			// 
 			// button_SaveLayer
 			// 
-			this->button_SaveLayer->Location = System::Drawing::Point(513, 438);
+			this->button_SaveLayer->Location = System::Drawing::Point(385, 356);
+			this->button_SaveLayer->Margin = System::Windows::Forms::Padding(2, 2, 2, 2);
 			this->button_SaveLayer->Name = L"button_SaveLayer";
-			this->button_SaveLayer->Size = System::Drawing::Size(101, 31);
+			this->button_SaveLayer->Size = System::Drawing::Size(76, 25);
 			this->button_SaveLayer->TabIndex = 3;
 			this->button_SaveLayer->Text = L"Save Layer";
 			this->button_SaveLayer->UseVisualStyleBackColor = true;
@@ -84,16 +88,17 @@ namespace Wave_renew
 			// 
 			// ViewForm
 			// 
-			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
+			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(799, 481);
+			this->ClientSize = System::Drawing::Size(599, 391);
 			this->Controls->Add(this->button_SaveLayer);
 			this->Controls->Add(this->button_ShowDisturbance);
 			this->Controls->Add(this->button_ShowHeight);
 			this->Controls->Add(this->pictureBox_main);
+			this->Margin = System::Windows::Forms::Padding(2, 2, 2, 2);
 			this->Name = L"ViewForm";
 			this->StartPosition = System::Windows::Forms::FormStartPosition::CenterScreen;
-			this->Text = L"Drawing";
+			this->Text = L"Processing, t = 0h 0m 0s";
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox_main))->EndInit();
 			this->ResumeLayout(false);
 

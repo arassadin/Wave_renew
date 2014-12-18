@@ -23,6 +23,7 @@ public delegate void generalDefaultsDelegate();
 public delegate void pauseButtonDelegate(bool toggled);
 public delegate int calculationDelegate();
 public delegate void updateDrawDelegate();
+public delegate void showRealTimeDelegate(int, int, int);
 
 namespace Wave_renew
 {
@@ -203,7 +204,7 @@ namespace Wave_renew
 				else
 				{
 					h = sqrt(h);
-					return Color::FromArgb(0, h * 255 / h_max / 2, 255 - h * 255 / h_max / 2);
+					return Color::FromArgb(0, h * 255 / h_max / 2, 255 - h * 255 / h_max / 2);	
 				}
 		}
 
@@ -481,9 +482,59 @@ namespace Wave_renew
 			point_tmp[0][1] = 51.609;
 		}
 
+		void tmp2()
+		{
+			terr_cnt = 2;
+
+			terr_tmp = new double*[terr_cnt];
+			for (int i = 0; i < terr_cnt; i++)
+				terr_tmp[i] = new double[10];
+
+			terr_tmp[0][0] = 30;
+			terr_tmp[0][1] = 2;
+			terr_tmp[0][2] = 288.63;
+			terr_tmp[0][3] = -19.42;
+			terr_tmp[0][4] = 288.8;
+			terr_tmp[0][5] = -19.73;
+			terr_tmp[0][6] = 289.38;
+			terr_tmp[0][7] = -19.17;
+			terr_tmp[0][8] = 289.53;
+			terr_tmp[0][9] = -19.39;
+
+			terr_tmp[1][0] = 30;
+			terr_tmp[1][1] = 6;
+			terr_tmp[1][2] = 288.8;
+			terr_tmp[1][3] = -19.73;
+			terr_tmp[1][4] = 289.97;
+			terr_tmp[1][5] = -20.02;
+			terr_tmp[1][6] = 289.53;
+			terr_tmp[1][7] = -19.39;
+			terr_tmp[1][8] = 289.86;
+			terr_tmp[1][9] = -19.89;
+
+			terr_tmp[1][0] = 30;
+			terr_tmp[1][1] = 2;
+			terr_tmp[1][2] = 288.97;
+			terr_tmp[1][3] = -20.2;
+			terr_tmp[1][4] = 289.03;
+			terr_tmp[1][5] = -20.86;
+			terr_tmp[1][6] = 289.86;
+			terr_tmp[1][7] = -19.89;
+			terr_tmp[1][8] = 289.97;
+			terr_tmp[1][9] = -20.72;
+
+			point_cnt = 1;
+			point_tmp = new double*[point_cnt];
+			for (int i = 0; i < point_cnt; i++)
+				point_tmp[i] = new double[2];
+
+			point_tmp[0][0] = 231.72;
+			point_tmp[0][1] = 51.609;
+		}
+
 		int mainForm::processing()
 		{
-			tmp();
+			tmp2();
 
 			int old_x = 0;
 			int old_y = 0;
@@ -696,20 +747,16 @@ namespace Wave_renew
 
 				if (output_moments <= t && t % output_moments == 0)
 				{
+					int h = (int)(delta_t[0] * t) / 3600;
+					int m = (int)((delta_t[0] * t) - h * 3600) / 60;
+					int s = (int)(delta_t[0] * t) - h * 3600 - m * 60;
+
+					Invoke_showRealTime(h, m, s);
 					showDisturbance();
 
 					//MessageBox::Show(System::Convert::ToString(t), "TimeOut", MessageBoxButtons::OK, MessageBoxIcon::Information);
 					if (this->checkBox_autoSaveLayers->Checked)
 						OutHeights(t);
-					
-					/*
-					int h = (int)(delta_t[0] * t) / 3600;
-					int m = (int)((delta_t[0] * t) - h * 3600) / 60;
-					int s = (int)(delta_t[0] * t) - h * 3600 - m * 60;
-					*/
-
-//					if (this->checkBox_autoSaveLayers->Checked)
-//						SaveBmp(t);
 
 				}
 				if (!running)
@@ -1133,6 +1180,19 @@ namespace Wave_renew
 		}
 #pragma endregion
 	private:
+		void Invoke_showRealTime(int h, int m, int s)
+		{
+			if (vf->InvokeRequired)
+			{
+				showRealTimeDelegate^ d = gcnew showRealTimeDelegate(this, &Wave_renew::mainForm::Invoke_showRealTime);
+				this->Invoke(d, h, m, s);
+			}
+			else
+			{
+				vf->Text = "Processing, t = " + System::Convert::ToString(h) + "h " + System::Convert::ToString(m) + "m " + System::Convert::ToString(s) + "s";
+			}
+		}
+
 		void Invoke_updateDraw()
 		{
 			if (vf->pictureBox_main->InvokeRequired)
