@@ -777,7 +777,12 @@ namespace Wave_renew
 				}
 			}
 			else
-				this->button_applyParameters->Enabled = false;
+				if (System::Convert::ToDouble(this->textBox_calcTime->Text)>currentCalculationTime)
+				{
+					this->button_applyParameters->Enabled = true;
+				}
+				else
+					this->button_applyParameters->Enabled = false;
 		}
 
 		int test()
@@ -1294,11 +1299,20 @@ namespace Wave_renew
 
 		System::Void button_applyParameters_Click(System::Object^  sender, System::EventArgs^  e)
 		{
-			this->button_applyParameters->Enabled = false;
-			calculationTime = System::Convert::ToInt32(this->textBox_calcTime->Text);
-			outTime = System::Convert::ToInt32(this->textBox_outTime->Text);
-			isobath = System::Convert::ToDouble(this->textBox_isobath->Text);
-			this->button_startCalc->Enabled = true;
+			if (!isProcessing)
+			{
+				this->button_applyParameters->Enabled = false;
+				calculationTime = System::Convert::ToInt32(this->textBox_calcTime->Text);
+				outTime = System::Convert::ToInt32(this->textBox_outTime->Text);
+				isobath = System::Convert::ToDouble(this->textBox_isobath->Text);
+				this->button_startCalc->Enabled = true;
+			}
+			else
+			{
+				this->button_applyParameters->Enabled = false;
+				calculationTime = System::Convert::ToInt32(this->textBox_calcTime->Text);
+				outTime = System::Convert::ToInt32(this->textBox_outTime->Text);
+			}
 		}
 
 		System::Void button_pauseCalc_Click(System::Object^  sender, System::EventArgs^  e)
