@@ -98,7 +98,7 @@ namespace Wave_renew
 		}
 
 	private:
-		double** new_d(int _y, int _x)
+		double** allocateMemory(int _y, int _x)
 		{
 			double **_m = new double *[_y + 1];
 			if (!_m) 
@@ -114,22 +114,14 @@ namespace Wave_renew
 			return _m;
 		}
 
-		void delete_d(double **_m)
+		void deallocateMemory(double **_m)
 		{
 			for (int j = 0; _m[j] != NULL; j++)
 				delete _m[j];
 			delete _m;
 		}
 
-		int copy_d(double **_dest, double **_src, int _y, int _x)
-		{
-			for (int j = 0; j < _y; j++)
-				if (!memcpy(_dest[j], _src[j], _x*sizeof(double)))
-					return 1;
-			return 0;
-		}
-
-		void swap_d(double ***_m1, double ***_m2)
+		void swapMemory(double ***_m1, double ***_m2)
 		{
 			double **tmp = *_m1;
 			*_m1 = *_m2;
@@ -226,11 +218,11 @@ namespace Wave_renew
 
 		void showBottom()
 		{
-			for (int y = 0; y < size_y; y++)
+			for (int y = 0; y < mapSizeY; y++)
 			{
-				for (int x = 0; x < size_x; x++)
+				for (int x = 0; x < mapSizeX; x++)
 				{
-					this->mainBitmap->SetPixel(x, size_y - 1 - y, bottom2color(bottom[y][x]));
+					this->mainBitmap->SetPixel(x, mapSizeY - 1 - y, bottom2color(terrian[y][x]));
 				}
 			}
 
@@ -242,18 +234,18 @@ namespace Wave_renew
 			if (!eta) 
 				return;
 
-			double **a = new_d(size_y, size_x);
-			for (int y = 0; y < size_y; y++)
-				for (int x = 0; x < size_x; x++)
-					if (bottom[y][x] < 0)
+			double **a = allocateMemory(mapSizeY, mapSizeX);
+			for (int y = 0; y < mapSizeY; y++)
+				for (int x = 0; x < mapSizeX; x++)
+					if (terrian[y][x] < 0)
 					{
 						double val = eta[y][x];
-						this->mainBitmap->SetPixel(x, size_y - 1 - y, eta2color(val));
+						this->mainBitmap->SetPixel(x, mapSizeY - 1 - y, eta2color(val));
 					}
 					else
 					{
-						double val = bottom[y][x] + LAND_UP;
-						this->mainBitmap->SetPixel(x, size_y - 1 - y, eta2color(val));
+						double val = terrian[y][x] + LAND_UP;
+						this->mainBitmap->SetPixel(x, mapSizeY - 1 - y, eta2color(val));
 					}
 
 			this->Invoke_updateDraw();
@@ -261,20 +253,20 @@ namespace Wave_renew
 
 		void ShowHeights()
 		{
-			double **a = new_d(size_y, size_x);
-			for (int y = 0; y < size_y; y++)
+			double **a = allocateMemory(mapSizeY, mapSizeX);
+			for (int y = 0; y < mapSizeY; y++)
 			{
-				for (int x = 0; x < size_x; x++)
+				for (int x = 0; x < mapSizeX; x++)
 				{
-					if (bottom[y][x] < 0)
+					if (terrian[y][x] < 0)
 					{
 						double val = visota[y][x];
-						this->mainBitmap->SetPixel(x, size_y - 1 - y, height2color(val));
+						this->mainBitmap->SetPixel(x, mapSizeY - 1 - y, height2color(val));
 					}
 					else
 					{
-						double val = bottom[y][x] + LAND_UP;
-						this->mainBitmap->SetPixel(x, size_y - 1 - y, height2color(val));
+						double val = terrian[y][x] + LAND_UP;
+						this->mainBitmap->SetPixel(x, mapSizeY - 1 - y, height2color(val));
 					}
 				}
 			}
@@ -287,23 +279,23 @@ namespace Wave_renew
 			ofstream outFile;
 			outFile.open(fileName.c_str(), ios::out);
 
-			for (int i = 0; i < size_y; i++)
+			for (int i = 0; i < mapSizeY; i++)
 			{
 				double h(0.0);
-				for (int j = 0; j < size_x - 1; j++)
+				for (int j = 0; j < mapSizeX - 1; j++)
 				{
-					if (bottom[i][j] < 0)
+					if (terrian[i][j] < 0)
 						h = visota[i][j];
 					else
-						h = bottom[i][j] + LAND_UP;
+						h = terrian[i][j] + LAND_UP;
 
 					outFile << h << "; ";
 				}
 
-				if (bottom[i][size_x - 1] < 0)
+				if (terrian[i][mapSizeX - 1] < 0)
 					h = 0.0;
 				else
-					h = bottom[i][size_x - 1] + LAND_UP;
+					h = terrian[i][mapSizeX - 1] + LAND_UP;
 
 				outFile << h << endl;
 			}
@@ -320,23 +312,23 @@ namespace Wave_renew
 			ofstream outFile;
 			outFile.open(tmpFileName, ios::out);
 
-			for (int i = 0; i < size_y; i++)
+			for (int i = 0; i < mapSizeY; i++)
 			{
 				double h(0.0);
-				for (int j = 0; j < size_x - 1; j++)
+				for (int j = 0; j < mapSizeX - 1; j++)
 				{
-					if (bottom[i][j] < 0)
+					if (terrian[i][j] < 0)
 						h = visota[i][j];
 					else
-						h = bottom[i][j] + LAND_UP;
+						h = terrian[i][j] + LAND_UP;
 
 					outFile << h << "; ";
 				}
 
-				if (bottom[i][size_x - 1] < 0)
-					h = visota[i][size_x - 1];
+				if (terrian[i][mapSizeX - 1] < 0)
+					h = visota[i][mapSizeX - 1];
 				else
-					h = bottom[i][size_x - 1] + LAND_UP;
+					h = terrian[i][mapSizeX - 1] + LAND_UP;
 
 				outFile << h << endl;
 			}
@@ -380,30 +372,29 @@ namespace Wave_renew
 					param[p] = (int)System::Convert::ToDouble(s->Substring(pos + 1, s->Length - pos - 1)->Trim());
 			}
 
-			//version = param[0];
-			size_x = param[1];
-			size_y = param[2];
-			start_x = param[3];
-			end_x = param[4];
-			start_y = param[5];
-			end_y = param[6];
+			mapSizeX = param[1];
+			mapSizeY = param[2];
+			startX_dgr = param[3];
+			endX_dgr = param[4];
+			startY_dgr = param[5];
+			endY_dgr = param[6];
 
-			if (bottom)
-				delete_d(bottom);
-			bottom = new_d(size_y, size_x);
+			if (terrian)
+				deallocateMemory(terrian);
+			terrian = allocateMemory(mapSizeY, mapSizeX);
 
-			for (int y = 0; y < size_y; y++)
-				for (int x = 0; x < size_x; x++)
-					mapFile >> bottom[y][x];
+			for (int y = 0; y < mapSizeY; y++)
+				for (int x = 0; x < mapSizeX; x++)
+					mapFile >> terrian[y][x];
 
-			this->textBox_rangeX_start->Text = System::Convert::ToString(start_x);
-			this->textBox_rangeX_end->Text = System::Convert::ToString(end_x);
-			this->textBox_rangeY_start->Text = System::Convert::ToString(start_y);
-			this->textBox_rangeY_end->Text = System::Convert::ToString(end_y);
-			this->textBox_sizeX->Text = System::Convert::ToString(size_x);
-			this->textBox_sizeY->Text = System::Convert::ToString(size_y);
-			delta_x = (end_x - start_x) / (size_x - 1);
-			delta_y = (end_y - start_y) / (size_y - 1);
+			this->textBox_rangeX_start->Text = System::Convert::ToString(startX_dgr);
+			this->textBox_rangeX_end->Text = System::Convert::ToString(endX_dgr);
+			this->textBox_rangeY_start->Text = System::Convert::ToString(startY_dgr);
+			this->textBox_rangeY_end->Text = System::Convert::ToString(endY_dgr);
+			this->textBox_sizeX->Text = System::Convert::ToString(mapSizeX);
+			this->textBox_sizeY->Text = System::Convert::ToString(mapSizeY);
+			delta_x = (endX_dgr - startX_dgr) / (mapSizeX - 1);
+			delta_y = (endY_dgr - startY_dgr) / (mapSizeY - 1);
 			this->textBox_dx->Text = System::Convert::ToString(delta_x);
 			this->textBox_dy->Text = System::Convert::ToString(delta_y);
 
@@ -437,7 +428,7 @@ namespace Wave_renew
 				{
 					promi = int(x*(i1*y + i2*(1 - y)) + (1 - x)*(i3*y + i4*(1 - y)) - 0.5);
 					promj = int(x*(j1*y + j2*(1 - y)) + (1 - x)*(j3*y + j4*(1 - y)) - 0.5);
-					if (promi >= 0 && promj >= 0 && promi <= size_x - 2 && promj <= size_y - 2)terr[promj][promi] = v;
+					if (promi >= 0 && promj >= 0 && promi <= mapSizeX - 2 && promj <= mapSizeY - 2)terr[promj][promi] = v;
 				}
 
 			}
@@ -445,10 +436,10 @@ namespace Wave_renew
 
 		void tmp()
 		{
-			terr_cnt = 2;
+			hearthBricksQ = 2;
 
-			terr_tmp = new double*[terr_cnt];
-			for (int i = 0; i < terr_cnt; i++)
+			terr_tmp = new double*[hearthBricksQ];
+			for (int i = 0; i < hearthBricksQ; i++)
 				terr_tmp[i] = new double[10];
 
 			terr_tmp[0][0] = 30;
@@ -473,9 +464,9 @@ namespace Wave_renew
 			terr_tmp[1][8] = 289.68;
 			terr_tmp[1][9] = -20.32;
 
-			point_cnt = 1;
-			point_tmp = new double*[point_cnt];
-			for (int i = 0; i < point_cnt; i++)
+			watchingPointsQ = 1;
+			point_tmp = new double*[watchingPointsQ];
+			for (int i = 0; i < watchingPointsQ; i++)
 				point_tmp[i] = new double[2];
 
 			point_tmp[0][0] = 231.72;
@@ -484,10 +475,10 @@ namespace Wave_renew
 
 		void tmp2()
 		{
-			terr_cnt = 2;
+			hearthBricksQ = 3;
 
-			terr_tmp = new double*[terr_cnt];
-			for (int i = 0; i < terr_cnt; i++)
+			terr_tmp = new double*[hearthBricksQ];
+			for (int i = 0; i < hearthBricksQ; i++)
 				terr_tmp[i] = new double[10];
 
 			terr_tmp[0][0] = 30;
@@ -512,20 +503,20 @@ namespace Wave_renew
 			terr_tmp[1][8] = 289.86;
 			terr_tmp[1][9] = -19.89;
 
-			terr_tmp[1][0] = 30;
-			terr_tmp[1][1] = 2;
-			terr_tmp[1][2] = 288.97;
-			terr_tmp[1][3] = -20.2;
-			terr_tmp[1][4] = 289.03;
-			terr_tmp[1][5] = -20.86;
-			terr_tmp[1][6] = 289.86;
-			terr_tmp[1][7] = -19.89;
-			terr_tmp[1][8] = 289.97;
-			terr_tmp[1][9] = -20.72;
+			terr_tmp[2][0] = 30;
+			terr_tmp[2][1] = 2;
+			terr_tmp[2][2] = 288.97;
+			terr_tmp[2][3] = -20.2;
+			terr_tmp[2][4] = 289.03;
+			terr_tmp[2][5] = -20.86;
+			terr_tmp[2][6] = 289.86;
+			terr_tmp[2][7] = -19.89;
+			terr_tmp[2][8] = 289.97;
+			terr_tmp[2][9] = -20.72;
 
-			point_cnt = 1;
-			point_tmp = new double*[point_cnt];
-			for (int i = 0; i < point_cnt; i++)
+			watchingPointsQ = 1;
+			point_tmp = new double*[watchingPointsQ];
+			for (int i = 0; i < watchingPointsQ; i++)
 				point_tmp[i] = new double[2];
 
 			point_tmp[0][0] = 231.72;
@@ -538,57 +529,54 @@ namespace Wave_renew
 
 			int old_x = 0;
 			int old_y = 0;
-			running = true;
+			isProcessing = true;
 			if (h) 
-				delete_d(h);
+				deallocateMemory(h);
 			if (eta) 
-				delete_d(eta); // don't forgot remove it, if eta can be loaded independently
+				deallocateMemory(eta);
 			if (eta_old) 
-				delete_d(eta_old); // don't forgot remove it, if eta can be loaded independently
-			if (eta_new) 
-				delete_d(eta_new);
+				deallocateMemory(eta_old);
 			if (visota) 
-				delete_d(visota);
+				deallocateMemory(visota);
 			if (u) 
-				delete_d(u);
+				deallocateMemory(u);
 			if (v) 
-				delete_d(v);
+				deallocateMemory(v);
 			if (u_old) 
-				delete_d(u_old);
+				deallocateMemory(u_old);
 			if (v_old) 
-				delete_d(v_old);
+				deallocateMemory(v_old);
 
-			h = new_d(size_y, size_x);
-			eta = new_d(size_y, size_x);
-			eta_old = new_d(size_y, size_x); 
-			eta_new = new_d(size_y, size_x);
-			u = new_d(size_y, size_x);
-			v = new_d(size_y, size_x);
-			u_old = new_d(size_y, size_x);
-			v_old = new_d(size_y, size_x);
-			visota = new_d(size_y, size_x);
-			if (!(bottom || h || eta || eta_old || visota || u || v || u_old || v_old))
+			h = allocateMemory(mapSizeY, mapSizeX);
+			eta = allocateMemory(mapSizeY, mapSizeX);
+			eta_old = allocateMemory(mapSizeY, mapSizeX);
+			u = allocateMemory(mapSizeY, mapSizeX);
+			v = allocateMemory(mapSizeY, mapSizeX);
+			u_old = allocateMemory(mapSizeY, mapSizeX);
+			v_old = allocateMemory(mapSizeY, mapSizeX);
+			visota = allocateMemory(mapSizeY, mapSizeX);
+			if (!(terrian || h || eta || eta_old || visota || u || v || u_old || v_old))
 				return 2;
 
 			if (delta_y_m)	
 				delete delta_y_m;
-			delta_y_m = new double[size_y];
+			delta_y_m = new double[mapSizeY];
 
 			if (delta_t) 
 				delete delta_t;
-			delta_t = new double[size_y];
+			delta_t = new double[mapSizeY];
 
 			if (terr_points) 
 				delete terr_points;
-			terr_points = new_d(8, terr_cnt);
+			terr_points = allocateMemory(8, hearthBricksQ);
 
 			if (point_points) 
 				delete point_points;
-			point_points = new_d(2, point_cnt);
+			point_points = allocateMemory(2, watchingPointsQ);
 
 			if (t_h_v_up) 
 				delete t_h_v_up;
-			t_h_v_up = new_d(8, terr_cnt);
+			t_h_v_up = allocateMemory(8, hearthBricksQ);
 
 			if (terr_up)
 			{
@@ -596,39 +584,39 @@ namespace Wave_renew
 					delete terr_up[j];
 				delete terr_up;
 			}
-			terr_up = new int *[size_y + 1]; 
-			for (int j = 0; j<size_y; j++) 
-				terr_up[j] = new int[size_x]; 
-			terr_up[size_y] = NULL;
+			terr_up = new int *[mapSizeY + 1];
+			for (int j = 0; j<mapSizeY; j++)
+				terr_up[j] = new int[mapSizeX];
+			terr_up[mapSizeY] = NULL;
 
-			time_moments = System::Convert::ToInt32(this->textBox_calcTime->Text);
-			output_moments = System::Convert::ToInt32(this->textBox_outTime->Text);
+			calculationTime = System::Convert::ToInt32(this->textBox_calcTime->Text);
+			outTime = System::Convert::ToInt32(this->textBox_outTime->Text);
 
 			//****************************************************************************
-			for (int y = 0; y<size_y; y++) 
+			for (int y = 0; y<mapSizeY; y++)
 			{
-				for (int x = 0; x < size_x; x++) 
+				for (int x = 0; x < mapSizeX; x++)
 				{
-					if (bottom[y][x] <= 0 && bottom[y][x] >= izobata) 
-						h[y][x] = izobata;
+					if (terrian[y][x] <= 0 && terrian[y][x] >= isobath)
+						h[y][x] = isobath;
 					else 
-						if (bottom[y][x] >= 0)  
-							h[y][x] = -1;   //for correct sqrt(-h[j][i]);
+						if (terrian[y][x] >= 0)
+							h[y][x] = -1;//sqrt(-h[j][i]);
 						else 
-							h[y][x] = bottom[y][x];
+							h[y][x] = terrian[y][x];
 
 					eta_old[y][x] = 0;
 					u_old[y][x] = 0;
 					v_old[y][x] = 0;
 					terr_up[y][x] = 0;
 
-					if (h_max > bottom[y][x]) 
-						h_max = bottom[y][x]; // find deeper place
+					if (maxHeight > terrian[y][x])
+						maxHeight = terrian[y][x];
 				}
 			}
 			//*****************************************************************************
 
-			for (int j = 0; j<terr_cnt; j++)
+			for (int j = 0; j<hearthBricksQ; j++)
 			{
 				t_h_v_up[0][j] = terr_tmp[j][0];
 				t_h_v_up[1][j] = terr_tmp[j][1];
@@ -638,21 +626,21 @@ namespace Wave_renew
 					terr_points[i][j] = terr_tmp[j][i + 2];
 
 				fill_tetragon(terr_up, j + 1,
-					0, 0, size_x - 1, size_y - 1,
-					(terr_points[0][j] - start_x) / delta_x + 0.5, (terr_points[1][j] - start_y) / delta_y + 0.5,
-					(terr_points[2][j] - start_x) / delta_x + 0.5, (terr_points[3][j] - start_y) / delta_y + 0.5,
-					(terr_points[4][j] - start_x) / delta_x + 0.5, (terr_points[5][j] - start_y) / delta_y + 0.5,
-					(terr_points[6][j] - start_x) / delta_x + 0.5, (terr_points[7][j] - start_y) / delta_y + 0.5
+					0, 0, mapSizeX - 1, mapSizeY - 1,
+					(terr_points[0][j] - startX_dgr) / delta_x + 0.5, (terr_points[1][j] - startY_dgr) / delta_y + 0.5,
+					(terr_points[2][j] - startX_dgr) / delta_x + 0.5, (terr_points[3][j] - startY_dgr) / delta_y + 0.5,
+					(terr_points[4][j] - startX_dgr) / delta_x + 0.5, (terr_points[5][j] - startY_dgr) / delta_y + 0.5,
+					(terr_points[6][j] - startX_dgr) / delta_x + 0.5, (terr_points[7][j] - startY_dgr) / delta_y + 0.5
 					);
 			}
 
-			delta_x_m = delta_x*M_PI * 6365500 / 180;
+			delta_x_m = delta_x * (double)M_PI * (double)EARTH_RADIUS / 180.0;
 
 			//***************************************************************************
-			for (int j = 0; j<size_y; j++)
+			for (int j = 0; j<mapSizeY; j++)
 			{
-				delta_y_m[j] = delta_x_m*cos((start_y + j*delta_y) / 180.0*M_PI);
-				delta_t[j] = 1;//delta_x_m*delta_y_m[j]/sqrt(-M_G*h_max*(delta_x_m*delta_x_m + delta_y_m[j]*delta_y_m[j]));
+				delta_y_m[j] = delta_x_m*cos((startY_dgr + j*delta_y) / 180.0*M_PI);
+				delta_t[j] = delta_x_m*delta_y_m[j]/sqrt(-M_G*maxHeight*(delta_x_m*delta_x_m + delta_y_m[j]*delta_y_m[j]));
 			}
 			//   if (delta_t > delta_y_m/sqrt(2*M_G*9500))
 			//      delta_t = delta_y_m/sqrt(2*M_G*9500);
@@ -662,16 +650,16 @@ namespace Wave_renew
 			double skor_zemli = dlina_ekvatora / vremya_oborota_zemli;
 			//float Koef_Sheroh=0.002;
 			//float Koef_Sh=-M_G*Koef_Sheroh*Koef_Sheroh;
-			for (t = 0; t <= time_moments; t++)
+			for (currentCalculationTime = 0; currentCalculationTime <= calculationTime; currentCalculationTime++)
 			{
-				this->Invoke_button_startCalc_changeText(System::Convert::ToString(t));
+				this->Invoke_button_startCalc_changeText(System::Convert::ToString(currentCalculationTime));
 
-				for (int j = 1; j<size_y - 1; j++)
+				for (int j = 1; j<mapSizeY - 1; j++)
 				{
-					double Koef_Koriolisa = 2 * skor_zemli*cos((start_y + j*delta_y) / 180.0*M_PI);
-					for (int i = 1; i<size_x - 1; i++)
+					double Koef_Koriolisa = 2 * skor_zemli*cos((startY_dgr + j*delta_y) / 180.0*M_PI);
+					for (int i = 1; i<mapSizeX - 1; i++)
 					{
-						if (i<size_x - 2 && j<size_y - 2)
+						if (i<mapSizeX - 2 && j<mapSizeY - 2)
 							eta[j][i] = eta_old[j][i] + delta_t[j] \
 							* (0.5 / delta_x_m * (u_old[j + 1][i] * (h[j + 2][i] + h[j + 1][i]) \
 							- u_old[j][i] * (h[j + 1][i] + h[j][i])) \
@@ -692,38 +680,38 @@ namespace Wave_renew
 								)*delta_t[j];
 						}
 
-						for (int b = 0; b < terr_cnt; b++)
-							if (terr_up[j][i] == b + 1 && t*delta_t[j] < t_h_v_up[0][b] - delta_t[j])
+						for (int b = 0; b < hearthBricksQ; b++)
+							if (terr_up[j][i] == b + 1 && currentCalculationTime*delta_t[j] < t_h_v_up[0][b] - delta_t[j])
 								eta[j][i] = eta[j][i] + t_h_v_up[2][b] * delta_t[j];
 					}
 				}
 
-				for (int i = 1; i<size_x; i++)
+				for (int i = 1; i<mapSizeX; i++)
 				{
-					int temp = (int)(i*size_y / size_x);
+					int temp = (int)(i*mapSizeY / mapSizeX);
 					v[0][i] = sqrt(-M_G*h[0][i])*eta[0][i] / (eta[1][i] - h[0][i]);
-					v[size_y - 2][i] = sqrt(-M_G*h[size_y - 2][i])*eta[size_y - 3][i] / (eta[size_y - 3][i] - h[size_y - 2][i]);;//v[size_y-3][i];//
-					v[size_y - 1][i] = v[size_y - 2][i];// sqrt(-M_G*h[size_y-1][i])*eta[size_y-1][i]/(eta[size_y-2][i]-h[size_y-1][i]);
+					v[mapSizeY - 2][i] = sqrt(-M_G*h[mapSizeY - 2][i])*eta[mapSizeY - 3][i] / (eta[mapSizeY - 3][i] - h[mapSizeY - 2][i]);;//v[size_y-3][i];//
+					v[mapSizeY - 1][i] = v[mapSizeY - 2][i];// sqrt(-M_G*h[size_y-1][i])*eta[size_y-1][i]/(eta[size_y-2][i]-h[size_y-1][i]);
 					//v[size_y][i] =v[size_y-1][i];
 					eta[0][i] = eta_old[0][i] - sqrt(-h[0][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(eta_old[0][i] - eta_old[1][i]);
-					eta[size_y - 2][i] = eta_old[size_y - 2][i] - sqrt(-h[size_y - 2][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(eta_old[size_y - 2][i] - eta_old[size_y - 3][i]);
-					eta[size_y - 1][i] = eta[size_y - 2][i];// - sqrt(-h[size_y-1][i]*M_G)*(delta_t[i]/delta_y_m[i])*(eta_old[size_y-1][i]-eta_old[size_y-2][i]);
+					eta[mapSizeY - 2][i] = eta_old[mapSizeY - 2][i] - sqrt(-h[mapSizeY - 2][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(eta_old[mapSizeY - 2][i] - eta_old[mapSizeY - 3][i]);
+					eta[mapSizeY - 1][i] = eta[mapSizeY - 2][i];// - sqrt(-h[size_y-1][i]*M_G)*(delta_t[i]/delta_y_m[i])*(eta_old[size_y-1][i]-eta_old[size_y-2][i]);
 				}
 
-				for (int j = 1; j<size_y; j++)
+				for (int j = 1; j<mapSizeY; j++)
 				{
 					u[j][0] = sqrt(-M_G*h[j][0])*eta[j][1] / (eta[j][1] - h[j][0]);
-					u[j][size_x - 2] = u[j][size_x - 3];//-sqrt(-M_G*h[j][size_x-2])*eta[j][size_x-3]/(eta[j][size_x-3]-h[j][size_x-2])
-					u[j][size_x - 1] = u[j][size_x - 2];// = sqrt(-M_G*h[j][size_x-1])*eta[j][size_x-1]/(eta[j][size_x-2]-h[j][size_x-1]);
+					u[j][mapSizeX - 2] = u[j][mapSizeX - 3];//-sqrt(-M_G*h[j][size_x-2])*eta[j][size_x-3]/(eta[j][size_x-3]-h[j][size_x-2])
+					u[j][mapSizeX - 1] = u[j][mapSizeX - 2];// = sqrt(-M_G*h[j][size_x-1])*eta[j][size_x-1]/(eta[j][size_x-2]-h[j][size_x-1]);
 					//u[j][size_x] = u[j][size_x-1];
 					eta[j][0] = eta_old[j][0] - sqrt(-h[j][0] * M_G)*(delta_t[j] / delta_x_m)*(eta_old[j][0] - eta_old[j][1]);
-					eta[j][size_x - 2] = eta_old[j][size_x - 2] - sqrt(-h[j][size_x - 2] * M_G)*(delta_t[j] / delta_x_m)*(eta_old[j][size_x - 2] - eta_old[j][size_x - 3]);
-					eta[j][size_x - 1] = eta[j][size_x - 2];// - sqrt(-h[j][size_x-1]*M_G)*(delta_t[j]/delta_x_m)*(eta_old[j][size_x-1]-eta_old[j][size_x-2]);
+					eta[j][mapSizeX - 2] = eta_old[j][mapSizeX - 2] - sqrt(-h[j][mapSizeX - 2] * M_G)*(delta_t[j] / delta_x_m)*(eta_old[j][mapSizeX - 2] - eta_old[j][mapSizeX - 3]);
+					eta[j][mapSizeX - 1] = eta[j][mapSizeX - 2];// - sqrt(-h[j][size_x-1]*M_G)*(delta_t[j]/delta_x_m)*(eta_old[j][size_x-1]-eta_old[j][size_x-2]);
 				}
 
-				for (int j = 1; j<size_y - 1; j++)
+				for (int j = 1; j<mapSizeY - 1; j++)
 				{
-					for (int i = 1; i<size_x - 1; i++)
+					for (int i = 1; i<mapSizeX - 1; i++)
 					{
 						if (eta[j][i] > 15.) 
 						{ 
@@ -733,7 +721,6 @@ namespace Wave_renew
 						{ 
 							eta[j][i] = -15.; 
 						}
-						// SizeX->Text=FloatToStr(eta[j][i]);
 						if (visota[j][i] < eta[j][i])
 						{ 
 							visota[j][i] = eta[j][i]; 
@@ -741,25 +728,24 @@ namespace Wave_renew
 					}
 				}
 
-				swap_d(&eta_old, &eta);
-				swap_d(&v_old, &v);
-				swap_d(&u_old, &u);
+				swapMemory(&eta_old, &eta);
+				swapMemory(&v_old, &v);
+				swapMemory(&u_old, &u);
 
-				if (output_moments <= t && t % output_moments == 0)
+				if (outTime <= currentCalculationTime && currentCalculationTime % outTime == 0)
 				{
-					int h = (int)(delta_t[0] * t) / 3600;
-					int m = (int)((delta_t[0] * t) - h * 3600) / 60;
-					int s = (int)(delta_t[0] * t) - h * 3600 - m * 60;
+					int h = (int)(delta_t[0] * currentCalculationTime) / 3600;
+					int m = (int)((delta_t[0] * currentCalculationTime) - h * 3600) / 60;
+					int s = (int)(delta_t[0] * currentCalculationTime) - h * 3600 - m * 60;
 
 					Invoke_showRealTime(h, m, s);
 					showDisturbance();
 
-					//MessageBox::Show(System::Convert::ToString(t), "TimeOut", MessageBoxButtons::OK, MessageBoxIcon::Information);
 					if (this->checkBox_autoSaveLayers->Checked)
-						OutHeights(t);
+						OutHeights(currentCalculationTime);
 
 				}
-				if (!running)
+				if (!isProcessing)
 				{
 					this->Invoke_afterCalcDefaults();
 					break;
@@ -774,7 +760,7 @@ namespace Wave_renew
 
 		void checkReadyForCalculationState()
 		{
-			if (!running)
+			if (!isProcessing)
 			{
 				if (this->textBox_calcTime->Text != "" && this->textBox_isobath->Text != "" && this->textBox_outTime->Text != "")
 				{
@@ -1260,7 +1246,7 @@ namespace Wave_renew
 			calculationThread = gcnew Thread(gcnew ThreadStart(this, &Wave_renew::mainForm::blabla));
 			calculationThread->IsBackground = false;
 			
-			running = true;
+			isProcessing = true;
 
 			this->button_applyParameters->Enabled = false;
 			this->button_startCalc->Enabled = false;
@@ -1273,7 +1259,7 @@ namespace Wave_renew
 			vf->Show();
 			calculationThread->Start();
 
-			running = false;
+			isProcessing = false;
 		}
 
 		System::Void textBox_calcTime_TextChanged(System::Object^  sender, System::EventArgs^  e)
@@ -1288,7 +1274,7 @@ namespace Wave_renew
 			{
 				if (System::Convert::ToDouble(this->textBox_outTime->Text))
 				{
-					output_moments = System::Convert::ToInt32(this->textBox_outTime->Text);
+					outTime = System::Convert::ToInt32(this->textBox_outTime->Text);
 				}
 			}
 			this->button_startCalc->Enabled = false;
@@ -1309,9 +1295,9 @@ namespace Wave_renew
 		System::Void button_applyParameters_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			this->button_applyParameters->Enabled = false;
-			time_moments = System::Convert::ToInt32(this->textBox_calcTime->Text);
-			output_moments = System::Convert::ToInt32(this->textBox_outTime->Text);
-			izobata = System::Convert::ToDouble(this->textBox_isobath->Text);
+			calculationTime = System::Convert::ToInt32(this->textBox_calcTime->Text);
+			outTime = System::Convert::ToInt32(this->textBox_outTime->Text);
+			isobath = System::Convert::ToDouble(this->textBox_isobath->Text);
 			this->button_startCalc->Enabled = true;
 		}
 
@@ -1354,7 +1340,7 @@ namespace Wave_renew
 				vf = gcnew ViewForm();
 				if (mainBitmap)
 					delete mainBitmap;
-				this->mainBitmap = gcnew Bitmap(size_x, size_y);
+				this->mainBitmap = gcnew Bitmap(mapSizeX, mapSizeY);
 				vf->pictureBox_main->Image = this->mainBitmap;
 				mainGraphics = Graphics::FromImage(this->mainBitmap);
 				showBottom();
@@ -1369,9 +1355,9 @@ namespace Wave_renew
 			cr->parse();
 
 			int x = 0;
-			//point_cnt = cr->pointsQ;
+			//watchingPointsQ = cr->pointsQ;
 			//point_tmp = cr->points;
-			//terr_cnt = cr->blocksQ;
+			//hearthBricksQ = cr->blocksQ;
 			//terr_tmp = cr->hearth;
 			//ofstream out;
 			//out.open("outttt", ios::out);
@@ -1379,14 +1365,14 @@ namespace Wave_renew
 			//out << cr->pointsQ << "_" << cr->blocksQ << endl;
 			/*
 			out << "hearth" << endl;
-			for (int i = 0; i < terr_cnt; i++)
+			for (int i = 0; i < hearthBricksQ; i++)
 			{
 				for (int j = 0; j < 10; j++)
 					out << terr_tmp[i][j] << "_";
 				out << endl;
 			}
 			out << "points" << endl;
-			for (int i = 0; i < terr_cnt; i++)
+			for (int i = 0; i < hearthBricksQ; i++)
 			{
 				for (int j = 0; j < 2; j++)
 					out << point_tmp[i][j] << "_";
