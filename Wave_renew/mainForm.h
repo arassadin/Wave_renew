@@ -618,7 +618,7 @@ namespace Wave_renew
 					);
 			}
 
-			delta_x_m = delta_x * (double)M_PI * (double)EARTH_RADIUS / 180.0;
+			delta_x_m = delta_x * M_PI * EARTH_RADIUS_M / 180.0;
 
 			//***************************************************************************
 			for (int j = 0; j<mapSizeY; j++)
@@ -629,9 +629,7 @@ namespace Wave_renew
 			//   if (delta_t > delta_y_m/sqrt(2*M_G*9500))
 			//      delta_t = delta_y_m/sqrt(2*M_G*9500);
 
-			double dlina_ekvatora(40076);
-			double vremya_oborota_zemli = 365 * 24 * 60 * 60 + 6 * 60 * 60 + 9 * 60 + 9;
-			double skor_zemli = dlina_ekvatora / vremya_oborota_zemli;
+			double EarthSpeed = EQUATOR_LENGTH_KM / EARTH_TURN_TIME_S;
 			//float Koef_Sheroh=0.002;
 			//float Koef_Sh=-M_G*Koef_Sheroh*Koef_Sheroh;
 			for (currentCalculationTime = 0; currentCalculationTime <= calculationTime; currentCalculationTime++)
@@ -640,7 +638,7 @@ namespace Wave_renew
 
 				for (int j = 1; j<mapSizeY - 1; j++)
 				{
-					double Koef_Koriolisa = 2 * skor_zemli*cos((startY_dgr + j*delta_y) / 180.0*M_PI);
+					double CoriolisEffectKoef = 2.0 * EarthSpeed * cos((startY_dgr + j*delta_y) / 180.0*M_PI);
 					for (int i = 1; i<mapSizeX - 1; i++)
 					{
 						if (i<mapSizeX - 2 && j<mapSizeY - 2)
@@ -653,12 +651,12 @@ namespace Wave_renew
 						if (i > 0 && j > 0)
 						{
 							uCurrent[j][i] = uOld[j][i] - (M_G / (2 * delta_x_m)*(waveFrontCurrent[j][i] - waveFrontCurrent[j - 1][i])
-								- Koef_Koriolisa*vOld[j][i]
+								- CoriolisEffectKoef*vOld[j][i]
 								//-Koef_Sh/exp(1.8*log(fabs(h[j][i]+eta[j][i])))
 								//*u_old[j][i]*sqrt(u_old[j][i]*u_old[j][i]+v_old[j][i]*v_old[j][i])
 								)*delta_t[j];
 							vCurrent[j][i] = vOld[j][i] - (M_G / (2 * delta_y_m[j])*(waveFrontCurrent[j][i] - waveFrontCurrent[j][i - 1])
-								+ Koef_Koriolisa*uOld[j][i]
+								+ CoriolisEffectKoef*uOld[j][i]
 								//-Koef_Sh/exp(1.8*log(fabs(h[j][i]+eta[j][i])))
 								//*v_old[j][i]*sqrt(u_old[j][i]*u_old[j][i]+v_old[j][i]*v_old[j][i])
 								)*delta_t[j];
@@ -723,7 +721,7 @@ namespace Wave_renew
 					int s = (int)(delta_t[0] * currentCalculationTime) - h * 3600 - m * 60;
 
 					Invoke_showRealTime(h, m, s);
-					showDisturbance();
+					//showDisturbance();
 
 					if (this->checkBox_autoSaveLayers->Checked)
 						OutHeights(currentCalculationTime);
