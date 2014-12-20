@@ -231,7 +231,7 @@ namespace Wave_renew
 
 		void showDisturbance()
 		{
-			if (!eta) 
+			if (!waveFrontCurrent)
 				return;
 
 			double **a = allocateMemory(mapSizeY, mapSizeX);
@@ -239,7 +239,7 @@ namespace Wave_renew
 				for (int x = 0; x < mapSizeX; x++)
 					if (terrian[y][x] < 0)
 					{
-						double val = eta[y][x];
+						double val = waveFrontCurrent[y][x];
 						this->mainBitmap->SetPixel(x, mapSizeY - 1 - y, eta2color(val));
 					}
 					else
@@ -260,7 +260,7 @@ namespace Wave_renew
 				{
 					if (terrian[y][x] < 0)
 					{
-						double val = visota[y][x];
+						double val = heightsFront[y][x];
 						this->mainBitmap->SetPixel(x, mapSizeY - 1 - y, height2color(val));
 					}
 					else
@@ -285,7 +285,7 @@ namespace Wave_renew
 				for (int j = 0; j < mapSizeX - 1; j++)
 				{
 					if (terrian[i][j] < 0)
-						h = visota[i][j];
+						h = heightsFront[i][j];
 					else
 						h = terrian[i][j] + LAND_UP;
 
@@ -318,7 +318,7 @@ namespace Wave_renew
 				for (int j = 0; j < mapSizeX - 1; j++)
 				{
 					if (terrian[i][j] < 0)
-						h = visota[i][j];
+						h = heightsFront[i][j];
 					else
 						h = terrian[i][j] + LAND_UP;
 
@@ -326,7 +326,7 @@ namespace Wave_renew
 				}
 
 				if (terrian[i][mapSizeX - 1] < 0)
-					h = visota[i][mapSizeX - 1];
+					h = heightsFront[i][mapSizeX - 1];
 				else
 					h = terrian[i][mapSizeX - 1] + LAND_UP;
 
@@ -463,14 +463,6 @@ namespace Wave_renew
 			terr_tmp[1][7] = -18.96;
 			terr_tmp[1][8] = 289.68;
 			terr_tmp[1][9] = -20.32;
-
-			watchingPointsQ = 1;
-			point_tmp = new double*[watchingPointsQ];
-			for (int i = 0; i < watchingPointsQ; i++)
-				point_tmp[i] = new double[2];
-
-			point_tmp[0][0] = 231.72;
-			point_tmp[0][1] = 51.609;
 		}
 
 		void tmp2()
@@ -513,14 +505,6 @@ namespace Wave_renew
 			terr_tmp[2][7] = -19.89;
 			terr_tmp[2][8] = 289.97;
 			terr_tmp[2][9] = -20.72;
-
-			watchingPointsQ = 1;
-			point_tmp = new double*[watchingPointsQ];
-			for (int i = 0; i < watchingPointsQ; i++)
-				point_tmp[i] = new double[2];
-
-			point_tmp[0][0] = 231.72;
-			point_tmp[0][1] = 51.609;
 		}
 
 		int mainForm::processing()
@@ -532,30 +516,30 @@ namespace Wave_renew
 			isProcessing = true;
 			if (h) 
 				deallocateMemory(h);
-			if (eta) 
-				deallocateMemory(eta);
-			if (eta_old) 
-				deallocateMemory(eta_old);
-			if (visota) 
-				deallocateMemory(visota);
-			if (u) 
-				deallocateMemory(u);
-			if (v) 
-				deallocateMemory(v);
-			if (u_old) 
-				deallocateMemory(u_old);
-			if (v_old) 
-				deallocateMemory(v_old);
+			if (waveFrontCurrent)
+				deallocateMemory(waveFrontCurrent);
+			if (waveFrontOld)
+				deallocateMemory(waveFrontOld);
+			if (heightsFront)
+				deallocateMemory(heightsFront);
+			if (uCurrent)
+				deallocateMemory(uCurrent);
+			if (vCurrent)
+				deallocateMemory(vCurrent);
+			if (uOld)
+				deallocateMemory(uOld);
+			if (vOld)
+				deallocateMemory(vOld);
 
 			h = allocateMemory(mapSizeY, mapSizeX);
-			eta = allocateMemory(mapSizeY, mapSizeX);
-			eta_old = allocateMemory(mapSizeY, mapSizeX);
-			u = allocateMemory(mapSizeY, mapSizeX);
-			v = allocateMemory(mapSizeY, mapSizeX);
-			u_old = allocateMemory(mapSizeY, mapSizeX);
-			v_old = allocateMemory(mapSizeY, mapSizeX);
-			visota = allocateMemory(mapSizeY, mapSizeX);
-			if (!(terrian || h || eta || eta_old || visota || u || v || u_old || v_old))
+			waveFrontCurrent = allocateMemory(mapSizeY, mapSizeX);
+			waveFrontOld = allocateMemory(mapSizeY, mapSizeX);
+			uCurrent = allocateMemory(mapSizeY, mapSizeX);
+			vCurrent = allocateMemory(mapSizeY, mapSizeX);
+			uOld = allocateMemory(mapSizeY, mapSizeX);
+			vOld = allocateMemory(mapSizeY, mapSizeX);
+			heightsFront = allocateMemory(mapSizeY, mapSizeX);
+			if (!(terrian || h || waveFrontCurrent || waveFrontOld || heightsFront || uCurrent || vCurrent || uOld || vOld))
 				return 2;
 
 			if (delta_y_m)	
@@ -605,9 +589,9 @@ namespace Wave_renew
 						else 
 							h[y][x] = terrian[y][x];
 
-					eta_old[y][x] = 0;
-					u_old[y][x] = 0;
-					v_old[y][x] = 0;
+					waveFrontOld[y][x] = 0;
+					uOld[y][x] = 0;
+					vOld[y][x] = 0;
 					terr_up[y][x] = 0;
 
 					if (maxHeight > terrian[y][x])
@@ -660,21 +644,21 @@ namespace Wave_renew
 					for (int i = 1; i<mapSizeX - 1; i++)
 					{
 						if (i<mapSizeX - 2 && j<mapSizeY - 2)
-							eta[j][i] = eta_old[j][i] + delta_t[j] \
-							* (0.5 / delta_x_m * (u_old[j + 1][i] * (h[j + 2][i] + h[j + 1][i]) \
-							- u_old[j][i] * (h[j + 1][i] + h[j][i])) \
-							+ 0.5 / delta_y_m[j] * (v_old[j][i + 1] * (h[j][i + 2] + h[j][i + 1]) \
-							- v_old[j][i] * (h[j][i + 1] + h[j][i])) );
+							waveFrontCurrent[j][i] = waveFrontOld[j][i] + delta_t[j] \
+							* (0.5 / delta_x_m * (uOld[j + 1][i] * (h[j + 2][i] + h[j + 1][i]) \
+							- uOld[j][i] * (h[j + 1][i] + h[j][i])) \
+							+ 0.5 / delta_y_m[j] * (vOld[j][i + 1] * (h[j][i + 2] + h[j][i + 1]) \
+							- vOld[j][i] * (h[j][i + 1] + h[j][i])));
 
 						if (i > 0 && j > 0)
 						{
-							u[j][i] = u_old[j][i] - (M_G / (2 * delta_x_m)*(eta[j][i] - eta[j - 1][i])
-								- Koef_Koriolisa*v_old[j][i]
+							uCurrent[j][i] = uOld[j][i] - (M_G / (2 * delta_x_m)*(waveFrontCurrent[j][i] - waveFrontCurrent[j - 1][i])
+								- Koef_Koriolisa*vOld[j][i]
 								//-Koef_Sh/exp(1.8*log(fabs(h[j][i]+eta[j][i])))
 								//*u_old[j][i]*sqrt(u_old[j][i]*u_old[j][i]+v_old[j][i]*v_old[j][i])
 								)*delta_t[j];
-							v[j][i] = v_old[j][i] - (M_G / (2 * delta_y_m[j])*(eta[j][i] - eta[j][i - 1])
-								+ Koef_Koriolisa*u_old[j][i]
+							vCurrent[j][i] = vOld[j][i] - (M_G / (2 * delta_y_m[j])*(waveFrontCurrent[j][i] - waveFrontCurrent[j][i - 1])
+								+ Koef_Koriolisa*uOld[j][i]
 								//-Koef_Sh/exp(1.8*log(fabs(h[j][i]+eta[j][i])))
 								//*v_old[j][i]*sqrt(u_old[j][i]*u_old[j][i]+v_old[j][i]*v_old[j][i])
 								)*delta_t[j];
@@ -682,55 +666,55 @@ namespace Wave_renew
 
 						for (int b = 0; b < hearthBricksQ; b++)
 							if (terr_up[j][i] == b + 1 && currentCalculationTime*delta_t[j] < t_h_v_up[0][b] - delta_t[j])
-								eta[j][i] = eta[j][i] + t_h_v_up[2][b] * delta_t[j];
+								waveFrontCurrent[j][i] = waveFrontCurrent[j][i] + t_h_v_up[2][b] * delta_t[j];
 					}
 				}
 
 				for (int i = 1; i<mapSizeX; i++)
 				{
 					int temp = (int)(i*mapSizeY / mapSizeX);
-					v[0][i] = sqrt(-M_G*h[0][i])*eta[0][i] / (eta[1][i] - h[0][i]);
-					v[mapSizeY - 2][i] = sqrt(-M_G*h[mapSizeY - 2][i])*eta[mapSizeY - 3][i] / (eta[mapSizeY - 3][i] - h[mapSizeY - 2][i]);;//v[size_y-3][i];//
-					v[mapSizeY - 1][i] = v[mapSizeY - 2][i];// sqrt(-M_G*h[size_y-1][i])*eta[size_y-1][i]/(eta[size_y-2][i]-h[size_y-1][i]);
+					vCurrent[0][i] = sqrt(-M_G*h[0][i])*waveFrontCurrent[0][i] / (waveFrontCurrent[1][i] - h[0][i]);
+					vCurrent[mapSizeY - 2][i] = sqrt(-M_G*h[mapSizeY - 2][i])*waveFrontCurrent[mapSizeY - 3][i] / (waveFrontCurrent[mapSizeY - 3][i] - h[mapSizeY - 2][i]);;//v[size_y-3][i];//
+					vCurrent[mapSizeY - 1][i] = vCurrent[mapSizeY - 2][i];// sqrt(-M_G*h[size_y-1][i])*eta[size_y-1][i]/(eta[size_y-2][i]-h[size_y-1][i]);
 					//v[size_y][i] =v[size_y-1][i];
-					eta[0][i] = eta_old[0][i] - sqrt(-h[0][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(eta_old[0][i] - eta_old[1][i]);
-					eta[mapSizeY - 2][i] = eta_old[mapSizeY - 2][i] - sqrt(-h[mapSizeY - 2][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(eta_old[mapSizeY - 2][i] - eta_old[mapSizeY - 3][i]);
-					eta[mapSizeY - 1][i] = eta[mapSizeY - 2][i];// - sqrt(-h[size_y-1][i]*M_G)*(delta_t[i]/delta_y_m[i])*(eta_old[size_y-1][i]-eta_old[size_y-2][i]);
+					waveFrontCurrent[0][i] = waveFrontOld[0][i] - sqrt(-h[0][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(waveFrontOld[0][i] - waveFrontOld[1][i]);
+					waveFrontCurrent[mapSizeY - 2][i] = waveFrontOld[mapSizeY - 2][i] - sqrt(-h[mapSizeY - 2][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(waveFrontOld[mapSizeY - 2][i] - waveFrontOld[mapSizeY - 3][i]);
+					waveFrontCurrent[mapSizeY - 1][i] = waveFrontCurrent[mapSizeY - 2][i];// - sqrt(-h[size_y-1][i]*M_G)*(delta_t[i]/delta_y_m[i])*(eta_old[size_y-1][i]-eta_old[size_y-2][i]);
 				}
 
 				for (int j = 1; j<mapSizeY; j++)
 				{
-					u[j][0] = sqrt(-M_G*h[j][0])*eta[j][1] / (eta[j][1] - h[j][0]);
-					u[j][mapSizeX - 2] = u[j][mapSizeX - 3];//-sqrt(-M_G*h[j][size_x-2])*eta[j][size_x-3]/(eta[j][size_x-3]-h[j][size_x-2])
-					u[j][mapSizeX - 1] = u[j][mapSizeX - 2];// = sqrt(-M_G*h[j][size_x-1])*eta[j][size_x-1]/(eta[j][size_x-2]-h[j][size_x-1]);
+					uCurrent[j][0] = sqrt(-M_G*h[j][0])*waveFrontCurrent[j][1] / (waveFrontCurrent[j][1] - h[j][0]);
+					uCurrent[j][mapSizeX - 2] = uCurrent[j][mapSizeX - 3];//-sqrt(-M_G*h[j][size_x-2])*eta[j][size_x-3]/(eta[j][size_x-3]-h[j][size_x-2])
+					uCurrent[j][mapSizeX - 1] = uCurrent[j][mapSizeX - 2];// = sqrt(-M_G*h[j][size_x-1])*eta[j][size_x-1]/(eta[j][size_x-2]-h[j][size_x-1]);
 					//u[j][size_x] = u[j][size_x-1];
-					eta[j][0] = eta_old[j][0] - sqrt(-h[j][0] * M_G)*(delta_t[j] / delta_x_m)*(eta_old[j][0] - eta_old[j][1]);
-					eta[j][mapSizeX - 2] = eta_old[j][mapSizeX - 2] - sqrt(-h[j][mapSizeX - 2] * M_G)*(delta_t[j] / delta_x_m)*(eta_old[j][mapSizeX - 2] - eta_old[j][mapSizeX - 3]);
-					eta[j][mapSizeX - 1] = eta[j][mapSizeX - 2];// - sqrt(-h[j][size_x-1]*M_G)*(delta_t[j]/delta_x_m)*(eta_old[j][size_x-1]-eta_old[j][size_x-2]);
+					waveFrontCurrent[j][0] = waveFrontOld[j][0] - sqrt(-h[j][0] * M_G)*(delta_t[j] / delta_x_m)*(waveFrontOld[j][0] - waveFrontOld[j][1]);
+					waveFrontCurrent[j][mapSizeX - 2] = waveFrontOld[j][mapSizeX - 2] - sqrt(-h[j][mapSizeX - 2] * M_G)*(delta_t[j] / delta_x_m)*(waveFrontOld[j][mapSizeX - 2] - waveFrontOld[j][mapSizeX - 3]);
+					waveFrontCurrent[j][mapSizeX - 1] = waveFrontCurrent[j][mapSizeX - 2];// - sqrt(-h[j][size_x-1]*M_G)*(delta_t[j]/delta_x_m)*(eta_old[j][size_x-1]-eta_old[j][size_x-2]);
 				}
 
 				for (int j = 1; j<mapSizeY - 1; j++)
 				{
 					for (int i = 1; i<mapSizeX - 1; i++)
 					{
-						if (eta[j][i] > 15.) 
+						if (waveFrontCurrent[j][i] > 15.)
 						{ 
-							eta[j][i] = 15.;
+							waveFrontCurrent[j][i] = 15.;
 						}
-						if (eta[j][i] < -15.) 
+						if (waveFrontCurrent[j][i] < -15.)
 						{ 
-							eta[j][i] = -15.; 
+							waveFrontCurrent[j][i] = -15.;
 						}
-						if (visota[j][i] < eta[j][i])
+						if (heightsFront[j][i] < waveFrontCurrent[j][i])
 						{ 
-							visota[j][i] = eta[j][i]; 
+							heightsFront[j][i] = waveFrontCurrent[j][i];
 						}
 					}
 				}
 
-				swapMemory(&eta_old, &eta);
-				swapMemory(&v_old, &v);
-				swapMemory(&u_old, &u);
+				swapMemory(&waveFrontOld, &waveFrontCurrent);
+				swapMemory(&vOld, &vCurrent);
+				swapMemory(&uOld, &uCurrent);
 
 				if (outTime <= currentCalculationTime && currentCalculationTime % outTime == 0)
 				{
