@@ -473,8 +473,8 @@ namespace Wave_renew
 			for (int i = 0; i < hearthBricksQ; i++)
 				terr_tmp[i] = new double[10];
 
-			terr_tmp[0][0] = 30;
-			terr_tmp[0][1] = 2;
+			terr_tmp[0][0] = 10;
+			terr_tmp[0][1] = 1;
 			terr_tmp[0][2] = 288.63;
 			terr_tmp[0][3] = -19.42;
 			terr_tmp[0][4] = 288.8;
@@ -495,8 +495,8 @@ namespace Wave_renew
 			terr_tmp[1][8] = 289.86;
 			terr_tmp[1][9] = -19.89;
 
-			terr_tmp[2][0] = 30;
-			terr_tmp[2][1] = 2;
+			terr_tmp[2][0] = 10;
+			terr_tmp[2][1] = 1;
 			terr_tmp[2][2] = 288.97;
 			terr_tmp[2][3] = -20.2;
 			terr_tmp[2][4] = 289.03;
