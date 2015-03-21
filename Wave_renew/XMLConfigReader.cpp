@@ -6,18 +6,18 @@ XMLConfigReader::XMLConfigReader(String^ path)
 	reader = gcnew XmlTextReader(path);
 }
 
-__Point* XMLConfigReader::XMLRoutine_Point(XmlReader^ reader)
+__Point* XMLConfigReader::XMLRoutine_Point(XmlReader^ _reader)
 {
 	//Console::WriteLine("----point---");
 
 	__Point* p = new __Point();
 
-	reader->ReadToFollowing("x");
-	reader->Read();
-	p->x = System::Convert::ToDouble(reader->Value);
-	reader->ReadToFollowing("y");
-	reader->Read();
-	p->y = System::Convert::ToDouble(reader->Value);
+	_reader->ReadToFollowing("x");
+	_reader->Read();
+	p->x = System::Convert::ToDouble(_reader->Value);
+	_reader->ReadToFollowing("y");
+	_reader->Read();
+	p->y = System::Convert::ToDouble(_reader->Value);
 
 	//Console::WriteLine("element {0}_{1}", p->x, p->y);
 
@@ -26,13 +26,13 @@ __Point* XMLConfigReader::XMLRoutine_Point(XmlReader^ reader)
 	return p;
 }
 
-void XMLConfigReader::XMLRoutine_ObservationPoints(XmlReader^ reader)
+void XMLConfigReader::XMLRoutine_ObservationPoints(XmlReader^ _reader)
 {
 	//Console::WriteLine("----observationpoints---");
 
-	reader->Read();
-	reader->MoveToAttribute("count");
-	pointsQ = System::Convert::ToInt32(reader->Value);
+	_reader->Read();
+	_reader->MoveToAttribute("count");
+	pointsQ = System::Convert::ToInt32(_reader->Value);
 	points = new Double*[pointsQ];
 	for (int i = 0; i < pointsQ; i++)
 	{
@@ -40,8 +40,8 @@ void XMLConfigReader::XMLRoutine_ObservationPoints(XmlReader^ reader)
 	}
 	for (int i = 0; i < pointsQ; i++)
 	{
-		reader->ReadToFollowing("Point");
-		__Point* p = XMLRoutine_Point(reader->ReadSubtree());
+		_reader->ReadToFollowing("Point");
+		__Point* p = XMLRoutine_Point(_reader->ReadSubtree());
 		points[i][0] = p->x;
 		points[i][1] = p->y;
 		points[i][2] = 0.0;
@@ -51,58 +51,58 @@ void XMLConfigReader::XMLRoutine_ObservationPoints(XmlReader^ reader)
 	//Console::WriteLine("----end observationpoints---");
 }
 
-void XMLConfigReader::XMLRoutine_Step(XmlReader^ reader, int blockn)
+void XMLConfigReader::XMLRoutine_Step(XmlReader^ _reader, int blockn)
 {
 	//Console::WriteLine("----step---");
 
-	reader->ReadToFollowing("StartTime");
-	reader->Read();
+	_reader->ReadToFollowing("StartTime");
+	_reader->Read();
 
-	reader->ReadToFollowing("FinishTime");
-	reader->Read();
-	hearth[blockn][0] = System::Convert::ToInt32(reader->Value);
+	_reader->ReadToFollowing("FinishTime");
+	_reader->Read();
+	hearth[blockn][0] = System::Convert::ToInt32(_reader->Value);
 
-	reader->ReadToFollowing("Height");
-	reader->Read();
-	hearth[blockn][1] = System::Convert::ToInt32(reader->Value);
+	_reader->ReadToFollowing("Height");
+	_reader->Read();
+	hearth[blockn][1] = System::Convert::ToInt32(_reader->Value);
 
 	//Console::WriteLine("element {0}_{1}", hearth[blockn][0], hearth[blockn][1]);
 
 	//Console::WriteLine("----end step---");
 }
 
-void XMLConfigReader::XMLRoutine_Brick(XmlReader^ reader, int blockn)
+void XMLConfigReader::XMLRoutine_Brick(XmlReader^ _reader, int blockn)
 {
 	//Console::WriteLine("----brick---");
 
-	reader->ReadToFollowing("Coordinates");
+	_reader->ReadToFollowing("Coordinates");
 	for (int i = 0; i < 4; i++)
 	{
-		reader->ReadToFollowing("Point");
-		__Point* p = XMLRoutine_Point(reader->ReadSubtree());
+		_reader->ReadToFollowing("Point");
+		__Point* p = XMLRoutine_Point(_reader->ReadSubtree());
 		hearth[blockn][2 * (i + 1)] = p->x;
 		hearth[blockn][2 * (i + 1) + 1] = p->y;
 		delete p;
 	}
-	reader->ReadToFollowing("Scenario");
-	reader->MoveToAttribute("stepq");
-	int stepq = System::Convert::ToInt32(reader->Value);
+	_reader->ReadToFollowing("Scenario");
+	_reader->MoveToAttribute("stepq");
+	int stepq = System::Convert::ToInt32(_reader->Value);
 	for (int i = 0; i < stepq; i++)
 	{
-		reader->ReadToFollowing("Step");
-		XMLRoutine_Step(reader->ReadSubtree(), blockn);
+		_reader->ReadToFollowing("Step");
+		XMLRoutine_Step(_reader->ReadSubtree(), blockn);
 	}
 
 	//Console::WriteLine("----end brick---");
 }
 
-void XMLConfigReader::XMLRoutine_Bricks(XmlReader^ reader)
+void XMLConfigReader::XMLRoutine_Bricks(XmlReader^ _reader)
 {
 	//Console::WriteLine("----bricks---");
 
-	reader->Read();
-	reader->MoveToAttribute("count");
-	blocksQ = System::Convert::ToInt32(reader->Value);
+	_reader->Read();
+	_reader->MoveToAttribute("count");
+	blocksQ = System::Convert::ToInt32(_reader->Value);
 	hearth = new Double*[blocksQ];
 	for (int i = 0; i < blocksQ; i++)
 	{
@@ -110,32 +110,41 @@ void XMLConfigReader::XMLRoutine_Bricks(XmlReader^ reader)
 	}
 	for (int i = 0; i < blocksQ; i++)
 	{
-		reader->ReadToFollowing("Brick");
-		XMLRoutine_Brick(reader->ReadSubtree(), i);
+		_reader->ReadToFollowing("Brick");
+		XMLRoutine_Brick(_reader->ReadSubtree(), i);
 	}
 
 	//Console::WriteLine("----end bricks---");
 }
 
 bool XMLConfigReader::parse()
-{
-	//Console::WriteLine("start reading");
-	while (reader->Read())
+{	
+	try
 	{
-		switch (reader->NodeType)
+		//Console::WriteLine("start reading");
+		while (reader->Read())
 		{
-		case XmlNodeType::Element:
-			if (reader->Name->ToLower() == "observationpoints")
+			switch (reader->NodeType)
 			{
-				XMLRoutine_ObservationPoints(reader->ReadSubtree());
-			}
-			if (reader->Name->ToLower() == "bricks")
-			{
-				XMLRoutine_Bricks(reader->ReadSubtree());
+			case XmlNodeType::Element:
+				if (reader->Name->ToLower() == "observationpoints")
+				{
+					XmlReader^ r = reader->ReadSubtree();
+					XMLRoutine_ObservationPoints(r);
+				}
+				if (reader->Name->ToLower() == "bricks")
+				{
+					XmlReader^ r = reader->ReadSubtree();
+					XMLRoutine_Bricks(r);
+				}
 			}
 		}
-	}
-	//Console::WriteLine("----end reading---");
+		//Console::WriteLine("----end reading---");
 
-	return true;
+		return true;
+	}
+	catch (Exception^ e)
+	{
+		return false;
+	}
 }

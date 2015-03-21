@@ -3,9 +3,6 @@
 #include<cmath>
 #include<cstdio>
 #include<iostream>
-#include<Windows.h>
-#include<WinUser.h>
-#include<winstring.h>
 #include<fstream>
 
 #include"defines.h"
@@ -400,8 +397,6 @@ namespace Wave_renew
 
 			mapFile.close();
 
-			MessageBox::Show("File Loading Completed!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
-
 			return true;
 		}
 
@@ -509,7 +504,7 @@ namespace Wave_renew
 
 		int mainForm::processing()
 		{
-			tmp2();
+			//tmp2();
 
 			int old_x = 0;
 			int old_y = 0;
@@ -1320,63 +1315,99 @@ namespace Wave_renew
 		System::Void openToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e)
 		{
 			OpenFileDialog^ openMap = gcnew OpenFileDialog;
-			openMap->InitialDirectory = "c:\\";
+			openMap->InitialDirectory = ".";
 			openMap->RestoreDirectory = true;
 
-			if (openMap->ShowDialog() == System::Windows::Forms::DialogResult::OK)
+			try
 			{
-				mapFileName = openMap->FileName;
-			}
+				if (openMap->ShowDialog() == System::Windows::Forms::DialogResult::OK)
+				{
+					mapFileName = openMap->FileName;
+				}
+				else
+					return;
 
-			this->Enabled = false;
-			if (this->loadMap())
-			{
-				if (vf)
-					delete vf;
-				vf = gcnew ViewForm();
-				if (mainBitmap)
-					delete mainBitmap;
-				this->mainBitmap = gcnew Bitmap(mapSizeX, mapSizeY);
-				vf->pictureBox_main->Image = this->mainBitmap;
-				mainGraphics = Graphics::FromImage(this->mainBitmap);
-				showBottom();
-				vf->Show();
+				this->Enabled = false;
+				if (this->loadMap())
+				{
+					MessageBox::Show("Map Loading Completed!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
+
+					if (vf)
+						delete vf;
+					vf = gcnew ViewForm();
+					if (mainBitmap)
+						delete mainBitmap;
+					this->mainBitmap = gcnew Bitmap(mapSizeX, mapSizeY);
+					vf->pictureBox_main->Image = this->mainBitmap;
+					mainGraphics = Graphics::FromImage(this->mainBitmap);
+					showBottom();
+					vf->Show();
+					this->Enabled = true;
+				}
+				else
+					MessageBox::Show("Map Loading Error!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
 			}
-			this->Enabled = true;
+			catch (Exception^ e)
+			{
+				return;
+			}
 		}
 
 		System::Void openConfigToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 		{
-			XMLConfigReader^ cr = gcnew XMLConfigReader("C:\\Users\\Alexandr\\Desktop\\config.xml");
-			cr->parse();
+			OpenFileDialog^ openConfig = gcnew OpenFileDialog;
+			openConfig->InitialDirectory = ".";
+			openConfig->RestoreDirectory = true;
 
-			int x = 0;
-			//watchingPointsQ = cr->pointsQ;
-			//point_tmp = cr->points;
-			//hearthBricksQ = cr->blocksQ;
-			//terr_tmp = cr->hearth;
-			//ofstream out;
-			//out.open("outttt", ios::out);
-
-			//out << cr->pointsQ << "_" << cr->blocksQ << endl;
-			/*
-			out << "hearth" << endl;
-			for (int i = 0; i < hearthBricksQ; i++)
+			try
 			{
-				for (int j = 0; j < 10; j++)
-					out << terr_tmp[i][j] << "_";
-				out << endl;
-			}
-			out << "points" << endl;
-			for (int i = 0; i < hearthBricksQ; i++)
-			{
-				for (int j = 0; j < 2; j++)
-					out << point_tmp[i][j] << "_";
-				out << endl;
-			}
+				String^ configPath = "";
+				if (openConfig->ShowDialog() == System::Windows::Forms::DialogResult::OK)
+				{
+					configPath = openConfig->FileName;
+				}
+				else
+					return;
 
-			out.close();
-			*/
+				XMLConfigReader^ cr = gcnew XMLConfigReader(configPath);
+				if (cr->parse())
+				{
+					MessageBox::Show("Config Loading Completed!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
+
+					watchingPointsQ = cr->pointsQ;
+					point_tmp = cr->points;
+					hearthBricksQ = cr->blocksQ;
+					terr_tmp = cr->hearth;
+
+					/*
+					ofstream out;
+					out.open("outttt", ios::out);
+					out << cr->pointsQ << "_" << cr->blocksQ << endl;
+					out << "hearth" << endl;
+					for (int i = 0; i < hearthBricksQ; i++)
+					{
+						for (int j = 0; j < 10; j++)
+							out << terr_tmp[i][j] << "_";
+						out << endl;
+					}
+					out << "points" << endl;
+					for (int i = 0; i < watchingPointsQ; i++)
+					{
+						for (int j = 0; j < 2; j++)
+							out << point_tmp[i][j] << "_";
+						out << endl;
+					}
+					out.close();
+					*/
+				}
+				else
+					MessageBox::Show("Config Loading Error!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
+			}
+			catch (Exception^ e)
+			{
+
+			}
+			
 		}
 
 		System::Void mainForm_KeyDown(System::Object^ sender, KeyEventArgs^ e)

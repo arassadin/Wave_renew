@@ -24,8 +24,6 @@ public:
 	int blocksQ;
 
 private:
-
-private:
 	XmlReader^ reader;
 	void XMLRoutine_Bricks(XmlReader^ reader);
 	void XMLRoutine_Brick(XmlReader^ reader, int blockn);

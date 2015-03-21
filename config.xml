@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <config>
-  <ObservationPoints count="2">
-      <Point>
-        <x>273,608</x>
-        <y>-17,975</y>
-      </Point>
-  </ObservationPoints>
   <Bricks count="1">
-     <Brick>
+    <Brick>
       <Coordinates>
         <Point>
           <x>149,73</x>
@@ -33,6 +27,16 @@
           <Height>15</Height>
         </Step>
       </Scenario>
-     </Brick>
+    </Brick>
   </Bricks>
+  <ObservationPoints count="2">
+    <Point>
+      <x>273,608</x>
+      <y>-17,975</y>
+    </Point>
+    <Point>
+      <x>80,42</x>
+      <y>13,10</y>
+    </Point>
+  </ObservationPoints>
 </config>
