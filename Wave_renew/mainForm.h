@@ -78,6 +78,7 @@ namespace Wave_renew
 		String^ mapFileName;
 		Thread^ calculationThread;
 		Thread^ drawingThread;
+		bool configIsLoaded = false;
 
 	public:
 		mainForm()
@@ -127,13 +128,19 @@ namespace Wave_renew
 
 		Color bottom2color(double h)
 		{
-			const int h_max = 80; // = sqrt(5000)
-			const int h_min = -110;// = -sqrt(10000)
-			if (h>0) 
+			const int h_max = 80; // = sqrt(5000);
+			const int h_min = -110;// = -sqrt(10000);
+
+			if (h > 0)
+				return Color::FromArgb(0, 255, 0);
+			else
+				return Color::FromArgb(0, 0, 255);
+
+			////////////////////////////////////////////////////////
+			if (h >= 0) 
 				h = sqrt(h); 
 			else 
-				if (h < 0) 
-					h = -sqrt(-h);
+				h = -sqrt(-h);
 			if (h >= 0) 
 				return Color::FromArgb(0, 55 + h * 200 / h_max, 0);
 			else 
@@ -201,6 +208,19 @@ namespace Wave_renew
 		{
 			const int h_max = 71; // = sqrt(5000)
 			const int h_minmax = 10;// = sqrt(400)
+
+			if (h > LAND_UP)
+			{
+				return Color::FromArgb(0, 255, 0);
+			}
+			else
+				if (h > 0)
+					return Color::FromArgb(255, 255, 255);
+				else
+					return Color::FromArgb(0, 0, 255);
+
+
+			///////////////////////////////////////////////////////////
 			if (h > LAND_UP)
 			{
 				h = sqrt(h - LAND_UP);
@@ -231,7 +251,6 @@ namespace Wave_renew
 			if (!waveFrontCurrent)
 				return;
 
-			double **a = allocateMemory(mapSizeY, mapSizeX);
 			for (int y = 0; y < mapSizeY; y++)
 				for (int x = 0; x < mapSizeX; x++)
 					if (terrian[y][x] < 0)
@@ -250,7 +269,6 @@ namespace Wave_renew
 
 		void ShowHeights()
 		{
-			double **a = allocateMemory(mapSizeY, mapSizeX);
 			for (int y = 0; y < mapSizeY; y++)
 			{
 				for (int x = 0; x < mapSizeX; x++)
@@ -258,12 +276,12 @@ namespace Wave_renew
 					if (terrian[y][x] < 0)
 					{
 						double val = heightsFront[y][x];
-						this->mainBitmap->SetPixel(x, mapSizeY - 1 - y, height2color(val));
+						this->mainBitmap->SetPixel(x, mapSizeY - y - 1, height2color(val));
 					}
 					else
 					{
 						double val = terrian[y][x] + LAND_UP;
-						this->mainBitmap->SetPixel(x, mapSizeY - 1 - y, height2color(val));
+						this->mainBitmap->SetPixel(x, mapSizeY - y - 1, height2color(val));
 					}
 				}
 			}
@@ -333,6 +351,22 @@ namespace Wave_renew
 			outFile.close();
 		}
 
+		void outMareogramm(ofstream &mareogrammOut)
+		{
+			for (int k = 0; k < watchingPointsQ; k++)
+			{
+				if (point_points[k][0] >= startX_dgr &&
+					point_points[k][0] <= endX_dgr &&
+					point_points[k][1] >= startY_dgr &&
+					point_points[k][1] <= endY_dgr)
+				{
+					int i = (point_points[k][0] - startX_dgr) / delta_x;
+					int j = (point_points[k][1] - startY_dgr) / delta_y;
+					mareogrammOut << currentCalculationTime*delta_t[j] << "; " << waveFrontCurrent[j][i] << endl;
+				}
+			}
+		}
+
 		bool loadMap()
 		{
 			ifstream mapFile;
@@ -350,7 +384,7 @@ namespace Wave_renew
 
 			const int param_cnt = 8;
 			int param[param_cnt];
-			array<String^>^ sparam = gcnew array<String^>(param_cnt) { "version", "size_x", "size_y", "start_x", "end_x", "start_y", "end_y", "data:"};
+			array<String^>^ sparam = gcnew array<String^>(param_cnt) {"version", "size_x", "size_y", "start_x", "end_x", "start_y", "end_y", "data:"};
 
 			char cs[MAX_STR_LEN];
 
@@ -364,9 +398,11 @@ namespace Wave_renew
 					MessageBox::Show("Wrong file format!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
 					return false;
 				}
+				s = s->Replace(",", ".");
 				int pos = s->IndexOf("=");
+				String^ tmp_str = s->Substring(pos + 1, s->Length - pos - 1)->Trim();
 				if (p != 7)
-					param[p] = (int)System::Convert::ToDouble(s->Substring(pos + 1, s->Length - pos - 1)->Trim());
+					param[p] = (int)System::Convert::ToDouble(tmp_str, System::Globalization::CultureInfo::InvariantCulture);
 			}
 
 			mapSizeX = param[1];
@@ -380,9 +416,20 @@ namespace Wave_renew
 				deallocateMemory(terrian);
 			terrian = allocateMemory(mapSizeY, mapSizeX);
 
+			ofstream of;
+			//of.open("C:\\Users\\Alexandr\\Desktop\\xxxxx", ios::out);
+
 			for (int y = 0; y < mapSizeY; y++)
+			{
 				for (int x = 0; x < mapSizeX; x++)
-					mapFile >> terrian[y][x];
+				{
+					double val(0.0);
+					mapFile >> val;
+					terrian[y][x] = val;
+					//of << val << "\t";
+				}
+				//of << "\n";
+			}
 
 			this->textBox_rangeX_start->Text = System::Convert::ToString(startX_dgr);
 			this->textBox_rangeX_end->Text = System::Convert::ToString(endX_dgr);
@@ -429,83 +476,8 @@ namespace Wave_renew
 			}
 		}
 
-		void tmp()
-		{
-			hearthBricksQ = 2;
-
-			terr_tmp = new double*[hearthBricksQ];
-			for (int i = 0; i < hearthBricksQ; i++)
-				terr_tmp[i] = new double[10];
-
-			terr_tmp[0][0] = 30;
-			terr_tmp[0][1] = 5;
-			terr_tmp[0][2] = 288.64;
-			terr_tmp[0][3] = -19.04;
-			terr_tmp[0][4] = 289.36;
-			terr_tmp[0][5] = -20.48;
-			terr_tmp[0][6] = 288.8;
-			terr_tmp[0][7] = -19;
-			terr_tmp[0][8] = 289.52;
-			terr_tmp[0][9] = -20.4;
-
-			terr_tmp[1][0] = 10;
-			terr_tmp[1][1] = -1;
-			terr_tmp[1][2] = 288.8;
-			terr_tmp[1][3] = -19;
-			terr_tmp[1][4] = 289.52;
-			terr_tmp[1][5] = -20.4;
-			terr_tmp[1][6] = 288.96;
-			terr_tmp[1][7] = -18.96;
-			terr_tmp[1][8] = 289.68;
-			terr_tmp[1][9] = -20.32;
-		}
-
-		void tmp2()
-		{
-			hearthBricksQ = 3;
-
-			terr_tmp = new double*[hearthBricksQ];
-			for (int i = 0; i < hearthBricksQ; i++)
-				terr_tmp[i] = new double[10];
-
-			terr_tmp[0][0] = 10;
-			terr_tmp[0][1] = 1;
-			terr_tmp[0][2] = 288.63;
-			terr_tmp[0][3] = -19.42;
-			terr_tmp[0][4] = 288.8;
-			terr_tmp[0][5] = -19.73;
-			terr_tmp[0][6] = 289.38;
-			terr_tmp[0][7] = -19.17;
-			terr_tmp[0][8] = 289.53;
-			terr_tmp[0][9] = -19.39;
-
-			terr_tmp[1][0] = 30;
-			terr_tmp[1][1] = 6;
-			terr_tmp[1][2] = 288.8;
-			terr_tmp[1][3] = -19.73;
-			terr_tmp[1][4] = 289.97;
-			terr_tmp[1][5] = -20.02;
-			terr_tmp[1][6] = 289.53;
-			terr_tmp[1][7] = -19.39;
-			terr_tmp[1][8] = 289.86;
-			terr_tmp[1][9] = -19.89;
-
-			terr_tmp[2][0] = 10;
-			terr_tmp[2][1] = 1;
-			terr_tmp[2][2] = 288.97;
-			terr_tmp[2][3] = -20.2;
-			terr_tmp[2][4] = 289.03;
-			terr_tmp[2][5] = -20.86;
-			terr_tmp[2][6] = 289.86;
-			terr_tmp[2][7] = -19.89;
-			terr_tmp[2][8] = 289.97;
-			terr_tmp[2][9] = -20.72;
-		}
-
 		int mainForm::processing()
 		{
-			//tmp2();
-
 			int old_x = 0;
 			int old_y = 0;
 			isProcessing = true;
@@ -549,10 +521,6 @@ namespace Wave_renew
 				delete terr_points;
 			terr_points = allocateMemory(8, hearthBricksQ);
 
-			if (point_points) 
-				delete point_points;
-			point_points = allocateMemory(2, watchingPointsQ);
-
 			if (t_h_v_up) 
 				delete t_h_v_up;
 			t_h_v_up = allocateMemory(8, hearthBricksQ);
@@ -567,6 +535,9 @@ namespace Wave_renew
 			for (int j = 0; j<mapSizeY; j++)
 				terr_up[j] = new int[mapSizeX];
 			terr_up[mapSizeY] = NULL;
+
+			ofstream mareogrammOut;
+			mareogrammOut.open("C:\\Users\\Alexandr\\Desktop\\mareogramm", ios::out);
 
 			calculationTime = System::Convert::ToInt32(this->textBox_calcTime->Text);
 			outTime = System::Convert::ToInt32(this->textBox_outTime->Text);
@@ -585,6 +556,7 @@ namespace Wave_renew
 							h[y][x] = terrian[y][x];
 
 					waveFrontOld[y][x] = 0;
+					waveFrontCurrent[y][x] = 0;
 					uOld[y][x] = 0;
 					vOld[y][x] = 0;
 					terr_up[y][x] = 0;
@@ -636,26 +608,23 @@ namespace Wave_renew
 					double CoriolisEffectKoef = 2.0 * EarthSpeed * cos((startY_dgr + j*delta_y) / 180.0*M_PI);
 					for (int i = 1; i<mapSizeX - 1; i++)
 					{
-						if (i<mapSizeX - 2 && j<mapSizeY - 2)
+						if (i < mapSizeX - 2 && j < mapSizeY - 2)
 							waveFrontCurrent[j][i] = waveFrontOld[j][i] + delta_t[j] \
 							* (0.5 / delta_x_m * (uOld[j + 1][i] * (h[j + 2][i] + h[j + 1][i]) \
 							- uOld[j][i] * (h[j + 1][i] + h[j][i])) \
 							+ 0.5 / delta_y_m[j] * (vOld[j][i + 1] * (h[j][i + 2] + h[j][i + 1]) \
 							- vOld[j][i] * (h[j][i + 1] + h[j][i])));
 
-						if (i > 0 && j > 0)
-						{
-							uCurrent[j][i] = uOld[j][i] - (M_G / (2 * delta_x_m)*(waveFrontCurrent[j][i] - waveFrontCurrent[j - 1][i])
-								- CoriolisEffectKoef*vOld[j][i]
-								//-Koef_Sh/exp(1.8*log(fabs(h[j][i]+eta[j][i])))
-								//*u_old[j][i]*sqrt(u_old[j][i]*u_old[j][i]+v_old[j][i]*v_old[j][i])
-								)*delta_t[j];
-							vCurrent[j][i] = vOld[j][i] - (M_G / (2 * delta_y_m[j])*(waveFrontCurrent[j][i] - waveFrontCurrent[j][i - 1])
-								+ CoriolisEffectKoef*uOld[j][i]
-								//-Koef_Sh/exp(1.8*log(fabs(h[j][i]+eta[j][i])))
-								//*v_old[j][i]*sqrt(u_old[j][i]*u_old[j][i]+v_old[j][i]*v_old[j][i])
-								)*delta_t[j];
-						}
+						uCurrent[j][i] = uOld[j][i] - (M_G / (2 * delta_x_m) * ( waveFrontCurrent[j][i] - waveFrontCurrent[j - 1][i] )
+							- CoriolisEffectKoef*vOld[j][i]
+							//-Koef_Sh/exp(1.8*log(fabs(h[j][i]+eta[j][i])))
+							//*u_old[j][i]*sqrt(u_old[j][i]*u_old[j][i]+v_old[j][i]*v_old[j][i])
+							)*delta_t[j];
+						vCurrent[j][i] = vOld[j][i] - (M_G / (2 * delta_y_m[j]) * ( waveFrontCurrent[j][i] - waveFrontCurrent[j][i - 1] )
+							+ CoriolisEffectKoef*uOld[j][i]
+							//-Koef_Sh/exp(1.8*log(fabs(h[j][i]+eta[j][i])))
+							//*v_old[j][i]*sqrt(u_old[j][i]*u_old[j][i]+v_old[j][i]*v_old[j][i])
+							)*delta_t[j];
 
 						for (int b = 0; b < hearthBricksQ; b++)
 							if (terr_up[j][i] == b + 1 && currentCalculationTime*delta_t[j] < t_h_v_up[0][b] - delta_t[j])
@@ -663,7 +632,7 @@ namespace Wave_renew
 					}
 				}
 
-				for (int i = 1; i<mapSizeX; i++)
+				for (int i = 1; i < mapSizeX; i++)
 				{
 					int temp = (int)(i*mapSizeY / mapSizeX);
 					vCurrent[0][i] = sqrt(-M_G*h[0][i])*waveFrontCurrent[0][i] / (waveFrontCurrent[1][i] - h[0][i]);
@@ -672,10 +641,10 @@ namespace Wave_renew
 					//v[size_y][i] =v[size_y-1][i];
 					waveFrontCurrent[0][i] = waveFrontOld[0][i] - sqrt(-h[0][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(waveFrontOld[0][i] - waveFrontOld[1][i]);
 					waveFrontCurrent[mapSizeY - 2][i] = waveFrontOld[mapSizeY - 2][i] - sqrt(-h[mapSizeY - 2][i] * M_G)*(delta_t[temp] / delta_y_m[temp])*(waveFrontOld[mapSizeY - 2][i] - waveFrontOld[mapSizeY - 3][i]);
-					waveFrontCurrent[mapSizeY - 1][i] = waveFrontCurrent[mapSizeY - 2][i];// - sqrt(-h[size_y-1][i]*M_G)*(delta_t[i]/delta_y_m[i])*(eta_old[size_y-1][i]-eta_old[size_y-2][i]);
+					//waveFrontCurrent[mapSizeY - 1][i] = waveFrontCurrent[mapSizeY - 2][i];// - sqrt(-h[size_y-1][i]*M_G)*(delta_t[i]/delta_y_m[i])*(eta_old[size_y-1][i]-eta_old[size_y-2][i]);
 				}
 
-				for (int j = 1; j<mapSizeY; j++)
+				for (int j = 1; j < mapSizeY; j++)
 				{
 					uCurrent[j][0] = sqrt(-M_G*h[j][0])*waveFrontCurrent[j][1] / (waveFrontCurrent[j][1] - h[j][0]);
 					uCurrent[j][mapSizeX - 2] = uCurrent[j][mapSizeX - 3];//-sqrt(-M_G*h[j][size_x-2])*eta[j][size_x-3]/(eta[j][size_x-3]-h[j][size_x-2])
@@ -683,7 +652,7 @@ namespace Wave_renew
 					//u[j][size_x] = u[j][size_x-1];
 					waveFrontCurrent[j][0] = waveFrontOld[j][0] - sqrt(-h[j][0] * M_G)*(delta_t[j] / delta_x_m)*(waveFrontOld[j][0] - waveFrontOld[j][1]);
 					waveFrontCurrent[j][mapSizeX - 2] = waveFrontOld[j][mapSizeX - 2] - sqrt(-h[j][mapSizeX - 2] * M_G)*(delta_t[j] / delta_x_m)*(waveFrontOld[j][mapSizeX - 2] - waveFrontOld[j][mapSizeX - 3]);
-					waveFrontCurrent[j][mapSizeX - 1] = waveFrontCurrent[j][mapSizeX - 2];// - sqrt(-h[j][size_x-1]*M_G)*(delta_t[j]/delta_x_m)*(eta_old[j][size_x-1]-eta_old[j][size_x-2]);
+					//waveFrontCurrent[j][mapSizeX - 1] = waveFrontCurrent[j][mapSizeX - 2];// - sqrt(-h[j][size_x-1]*M_G)*(delta_t[j]/delta_x_m)*(eta_old[j][size_x-1]-eta_old[j][size_x-2]);
 				}
 
 				for (int j = 1; j<mapSizeY - 1; j++)
@@ -709,6 +678,24 @@ namespace Wave_renew
 				swapMemory(&vOld, &vCurrent);
 				swapMemory(&uOld, &uCurrent);
 
+				if (currentCalculationTime % 1 == 0 && watchingPointsQ > 0)
+				{
+					mareogrammOut << currentCalculationTime*delta_t[0] << "; ";
+					for (int k = 0; k < watchingPointsQ; k++)
+					{
+						if (point_points[k][0] >= startX_dgr &&
+							point_points[k][0] <= endX_dgr &&
+							point_points[k][1] >= startY_dgr &&
+							point_points[k][1] <= endY_dgr)
+						{
+							int i = (point_points[k][0] - startX_dgr) / delta_x;
+							int j = (point_points[k][1] - startY_dgr) / delta_y;
+							mareogrammOut << waveFrontCurrent[j][i] << "; ";
+						}
+					}
+					mareogrammOut << endl;
+				}
+
 				if (outTime <= currentCalculationTime && currentCalculationTime % outTime == 0)
 				{
 					int h = (int)(delta_t[0] * currentCalculationTime) / 3600;
@@ -716,18 +703,21 @@ namespace Wave_renew
 					int s = (int)(delta_t[0] * currentCalculationTime) - h * 3600 - m * 60;
 
 					Invoke_showRealTime(h, m, s);
-					//showDisturbance();
+					ShowHeights();
 
 					if (this->checkBox_autoSaveLayers->Checked)
 						OutHeights(currentCalculationTime);
 
 				}
+
 				if (!isProcessing)
 				{
 					this->Invoke_afterCalcDefaults();
 					break;
 				}
 			}
+
+			mareogrammOut.close();
 
 			MessageBox::Show("Modelling Complete!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
 			this->Invoke_afterCalcDefaults();
@@ -743,7 +733,10 @@ namespace Wave_renew
 				{
 					if (System::Convert::ToDouble(this->textBox_calcTime->Text) > 0 && System::Convert::ToDouble(this->textBox_outTime->Text))
 					{
-						this->button_applyParameters->Enabled = true;
+						if (configIsLoaded)
+							this->button_applyParameters->Enabled = true;
+						else
+							this->button_applyParameters->Enabled = false;
 					}
 					else
 						this->button_applyParameters->Enabled = false;
@@ -1342,14 +1335,18 @@ namespace Wave_renew
 					mainGraphics = Graphics::FromImage(this->mainBitmap);
 					showBottom();
 					vf->Show();
-					this->Enabled = true;
 				}
 				else
 					MessageBox::Show("Map Loading Error!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
+
+				checkReadyForCalculationState();
+				this->Enabled = true;
 			}
 			catch (Exception^ e)
 			{
-				return;
+				MessageBox::Show(e->ToString(), "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error); 
+				checkReadyForCalculationState();
+				this->Enabled = true;
 			}
 		}
 
@@ -1369,43 +1366,38 @@ namespace Wave_renew
 				else
 					return;
 
+				this->Enabled = false;
+				configIsLoaded = false;
+
 				XMLConfigReader^ cr = gcnew XMLConfigReader(configPath);
 				if (cr->parse())
 				{
 					MessageBox::Show("Config Loading Completed!", "Information!", MessageBoxButtons::OK, MessageBoxIcon::Information);
 
-					watchingPointsQ = cr->pointsQ;
-					point_tmp = cr->points;
 					hearthBricksQ = cr->blocksQ;
+					if (terr_tmp)
+						delete terr_tmp;
 					terr_tmp = cr->hearth;
 
-					/*
-					ofstream out;
-					out.open("outttt", ios::out);
-					out << cr->pointsQ << "_" << cr->blocksQ << endl;
-					out << "hearth" << endl;
-					for (int i = 0; i < hearthBricksQ; i++)
-					{
-						for (int j = 0; j < 10; j++)
-							out << terr_tmp[i][j] << "_";
-						out << endl;
-					}
-					out << "points" << endl;
-					for (int i = 0; i < watchingPointsQ; i++)
-					{
-						for (int j = 0; j < 2; j++)
-							out << point_tmp[i][j] << "_";
-						out << endl;
-					}
-					out.close();
-					*/
+					watchingPointsQ = cr->pointsQ;
+					if (point_points)
+						delete point_points;
+					point_points = cr->points;
+
+					configIsLoaded = true;
 				}
 				else
 					MessageBox::Show("Config Loading Error!", "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
+
+				checkReadyForCalculationState();
+				this->Enabled = true;
 			}
 			catch (Exception^ e)
 			{
-
+				MessageBox::Show(e->ToString(), "Error!", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				checkReadyForCalculationState();
+				this->Enabled = true;
+				configIsLoaded = false;
 			}
 			
 		}

@@ -26,6 +26,7 @@ double **vOld;
 int hearthBricksQ;
 int watchingPointsQ;
 double **terr_points;
+double **terr_tmp;
 double **point_points;
 
 double **h;
@@ -34,5 +35,3 @@ double delta_x, delta_y;
 double delta_x_m, *delta_y_m;
 double **t_h_v_up;
 int **terr_up;
-double **terr_tmp;
-double **point_tmp;
